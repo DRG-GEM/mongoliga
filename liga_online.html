@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Liga de Fútbol Sala</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .view-button.active { background-color: #4f46e5; color: white; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="loading" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">🏆 Gestor de Liga de Amigos 🏆</h1>
+            <p class="text-gray-600 mt-2">Estadísticas de nuestra liga particular.</p>
+        </header>
+
+        <div class="flex justify-center mb-8 bg-white p-2 rounded-xl shadow-md max-w-md mx-auto">
+            <button id="public-view-btn" class="view-button w-1/2 py-2 px-4 rounded-lg font-semibold transition-colors">Vista Pública</button>
+            <button id="admin-view-btn" class="view-button w-1/2 py-2 px-4 rounded-lg font-semibold transition-colors">Administración</button>
+        </div>
+
+        <!-- Vista Pública -->
+        <div id="public-view">
+            <!-- Contenido de la vista pública (igual que antes) -->
+             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Últimos 5 Partidos</h2>
+                        <div id="latest-results" class="space-y-4"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Historial Completo</h2>
+                         <div id="public-match-history" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Clasificación</h2>
+                        <div id="public-standings"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Pichichi</h2>
+                        <div id="public-top-scorers"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de Administración -->
+        <div id="admin-view" class="hidden">
+            <!-- Contenido de la vista de admin (igual que antes) -->
+            <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1 space-y-8">
+                    <div id="teams-section" class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Equipos</h2>
+                        <div id="teams-list" class="space-y-4"></div>
+                        <form id="add-team-form" class="mt-4 space-y-3">
+                            <input type="text" id="team-name" placeholder="Nombre del Equipo" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500" required>
+                            <input type="url" id="team-logo" placeholder="URL del logo (opcional)" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500">
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">Añadir Equipo</button>
+                        </form>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Jugadores</h2>
+                        <div id="players-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></div>
+                        <form id="add-player-form" class="mt-4 space-y-3">
+                            <input type="text" id="player-name" placeholder="Nombre del Jugador" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500" required>
+                            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors">Añadir Jugador</button>
+                        </form>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Zona de Peligro</h2>
+                        <button id="clear-data-button" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors">Resetear Todos los Datos</button>
+                     </div>
+                </div>
+                <div class="md:col-span-2 space-y-8">
+                    <div id="add-match-section" class="bg-white p-6 rounded-xl shadow-md hidden">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Registrar Nuevo Partido</h2>
+                        <form id="add-match-form" class="space-y-4">
+                            <div> <label for="match-date" class="block font-medium mb-1">Fecha del Partido</label> <input type="date" id="match-date" class="w-full p-2 border rounded-md" required> </div>
+                            <div class="grid grid-cols-2 gap-4"> <div id="team-1-selector"></div> <div id="team-2-selector"></div> </div>
+                            <div id="scorers-section" class="space-y-4 pt-4 border-t"> <h3 class="font-bold text-lg">Goleadores</h3> <div id="team-1-scorers"></div> <div id="team-2-scorers"></div> </div>
+                            <div> <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors">Guardar Partido</button> </div>
+                        </form>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Historial de Partidos (Admin)</h2>
+                        <div id="admin-match-history" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ***************************************************************
+        // PASO 2: PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
+        // ***************************************************************
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_AUTH_DOMAIN",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_STORAGE_BUCKET",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+        // ***************************************************************
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const leagueDocRef = doc(db, "leagueData", "main");
+
+        // El resto del script es prácticamente igual, pero usa Firebase
+        // El código completo se omite aquí por brevedad, pero está incluido en el bloque de descarga.
+        
+        // --- State ---
+        const state = {
+            teams: [],
+            players: [],
+            matches: [],
+            currentView: 'public',
+            dataLoaded: false
+        };
+
+        // --- DOM Elements ---
+        const loadingSpinner = document.getElementById('loading');
+        // ... (el resto de los getElementById son iguales que en la versión anterior)
+        const publicViewBtn = document.getElementById('public-view-btn');
+        const adminViewBtn = document.getElementById('admin-view-btn');
+        const publicView = document.getElementById('public-view');
+        const adminView = document.getElementById('admin-view');
+        const addTeamForm = document.getElementById('add-team-form');
+        const teamsList = document.getElementById('teams-list');
+        const addPlayerForm = document.getElementById('add-player-form');
+        const playersList = document.getElementById('players-list');
+        const addMatchSection = document.getElementById('add-match-section');
+        const addMatchForm = document.getElementById('add-match-form');
+        const team1Selector = document.getElementById('team-1-selector');
+        const team2Selector = document.getElementById('team-2-selector');
+        const team1Scorers = document.getElementById('team-1-scorers');
+        const team2Scorers = document.getElementById('team-2-scorers');
+        const adminMatchHistory = document.getElementById('admin-match-history');
+        const clearDataButton = document.getElementById('clear-data-button');
+        const latestResults = document.getElementById('latest-results');
+        const publicStandings = document.getElementById('public-standings');
+        const publicTopScorers = document.getElementById('public-top-scorers');
+        const publicMatchHistory = document.getElementById('public-match-history');
+
+        // --- Data Persistence (Firebase) ---
+        async function saveData() {
+            try {
+                // Quitamos propiedades que no necesitamos guardar
+                const { currentView, dataLoaded, ...dataToSave } = state;
+                await setDoc(leagueDocRef, dataToSave);
+            } catch (error) {
+                console.error("Error saving data to Firebase: ", error);
+                alert("Hubo un error al guardar los datos.");
+            }
+        }
+
+        function loadData() {
+            onSnapshot(leagueDocRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    state.teams = data.teams || [];
+                    state.players = data.players || [];
+                    state.matches = data.matches || [];
+                } else {
+                    // Si no existe el documento, lo creamos vacío
+                    saveData(); 
+                }
+                state.dataLoaded = true;
+                loadingSpinner.style.display = 'none';
+                render();
+            }, (error) => {
+                console.error("Error loading data from Firebase: ", error);
+                alert("No se pudieron cargar los datos. Revisa la configuración de Firebase.");
+                loadingSpinner.style.display = 'none';
+            });
+        }
+        
+        // --- View Management ---
+        function setView(view) { state.currentView = view; if (view === 'public') { publicView.classList.remove('hidden'); adminView.classList.add('hidden'); publicViewBtn.classList.add('active'); adminViewBtn.classList.remove('active'); } else { publicView.classList.add('hidden'); adminView.classList.remove('hidden'); publicViewBtn.classList.remove('active'); adminViewBtn.classList.add('active'); } }
+        publicViewBtn.addEventListener('click', () => setView('public'));
+        adminViewBtn.addEventListener('click', () => setView('admin'));
+
+        // --- Rendering ---
+        // (Todas las funciones de render son idénticas a la versión anterior)
+        function render() { if (!state.dataLoaded) return; renderTeams(); renderPlayers(); checkTeamsAndShowMatchForm(); renderMatchFormSelectors(); renderAdminMatchHistory(); renderLatestResults(); renderStats(); renderPublicMatchHistory(); }
+        function generateStandingsHTML(teamStats) { if (teamStats.length < 2) return '<p class="text-gray-500">Se necesitan 2 equipos.</p>'; return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover"> ${t.name} </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> </div>`; }
+        function generateTopScorersHTML(sortedScorers) { if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; return ` <ul class="space-y-2"> ${sortedScorers.map(([player, goals], index) => ` <li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-yellow-50' : ''))}"> <span class="font-medium">${index + 1}. ${player}</span> <span class="font-bold text-lg">${goals}</span> </li> `).join('')} </ul>`; }
+        function generateMatchResultHTML(match, isAdmin = false) { const team1 = state.teams.find(t => t.id === match.teams[0].id); const team2 = state.teams.find(t => t.id === match.teams[1].id); if(!team1 || !team2) return ''; const matchScorers = match.scorers.map(s => { const team = state.teams.find(t => t.id === s.teamId); return `<li>${s.player} (${s.goals}) - ${team?.name || 'N/A'}</li>`; }).join(''); return ` <div class="bg-gray-50 p-4 rounded-lg"> <div class="flex justify-between items-center mb-2"> <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span> ${isAdmin ? `<button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>` : ''} </div> <div class="flex justify-between items-center text-xl font-bold"> <span class="flex-1 text-left truncate">${team1.name}</span> <span class="mx-4">${match.teams[0].score} - ${match.teams[1].score}</span> <span class="flex-1 text-right truncate">${team2.name}</span> </div> ${isAdmin ? `<details class="mt-2 text-sm"> <summary class="cursor-pointer text-gray-600">Ver goleadores</summary> <ul class="list-disc pl-5 mt-1">${matchScorers || '<li>Sin goles registrados</li>'}</ul> </details>` : ''} </div> `; }
+        function renderTeams() { teamsList.innerHTML = ''; if (state.teams.length === 0) { teamsList.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } else { state.teams.forEach((team) => { const teamEl = document.createElement('div'); teamEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg'; teamEl.innerHTML = `<div class="flex items-center gap-3"><img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" alt="Logo" class="w-10 h-10 rounded-full object-cover"><span class="font-semibold">${team.name}</span></div><button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button>`; teamsList.appendChild(teamEl); }); } }
+        function renderPlayers() { playersList.innerHTML = ''; if (state.players.length === 0) { playersList.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } else { state.players.sort().forEach((player) => { const playerEl = document.createElement('div'); playerEl.className = 'flex justify-between items-center'; playerEl.innerHTML = `<span>${player}</span><button data-name="${player}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>`; playersList.appendChild(playerEl); }); } }
+        function checkTeamsAndShowMatchForm() { if (state.teams.length >= 2) { addMatchSection.classList.remove('hidden'); document.getElementById('teams-section').querySelector('form').classList.add('hidden'); } else { addMatchSection.classList.add('hidden'); document.getElementById('teams-section').querySelector('form').classList.remove('hidden'); } }
+        function renderMatchFormSelectors() { if (state.teams.length < 2) return; team1Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[0].name}</label><input type="number" id="team-1-score" class="w-full p-2 border rounded-md" min="0" placeholder="Goles" required>`; team2Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[1].name}</label><input type="number" id="team-2-score" class="w-full p-2 border rounded-md" min="0" placeholder="Goles" required>`; renderScorersInputs(state.teams[0].id, 1); renderScorersInputs(state.teams[1].id, 2); }
+        function renderScorersInputs(teamId, teamNumber) { const container = teamNumber === 1 ? team1Scorers : team2Scorers; container.innerHTML = `<h4 class="font-semibold text-gray-700">${state.teams[teamNumber-1].name}</h4>`; const playerOptions = state.players.map(p => `<option value="${p}">${p}</option>`).join(''); for (let i = 0; i < 20; i++) { const scorerEl = document.createElement('div'); scorerEl.className = `scorer-input-group scorer-team-${teamNumber} flex gap-2 mb-2 hidden`; scorerEl.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md" data-team-id="${teamId}"><option value="">Selecciona jugador...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded-md" min="1" value="1">`; container.appendChild(scorerEl); } const scoreInput = document.getElementById(`team-${teamNumber}-score`); scoreInput?.addEventListener('input', (e) => { const goalCount = parseInt(e.target.value) || 0; container.querySelectorAll(`.scorer-input-group`).forEach((group, index) => { if (index < goalCount) group.classList.remove('hidden'); else { group.classList.add('hidden'); group.querySelector('select').value = ''; group.querySelector('input').value = '1'; } }); }); }
+        function renderAdminMatchHistory() { adminMatchHistory.innerHTML = ''; if (state.matches.length === 0) { adminMatchHistory.innerHTML = '<p class="text-gray-500">Aún no se han jugado partidos.</p>'; } else { [...state.matches].reverse().forEach(match => { adminMatchHistory.innerHTML += generateMatchResultHTML(match, true); }); } }
+        function renderLatestResults() { latestResults.innerHTML = ''; if (state.matches.length === 0) { latestResults.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } const last5matches = [...state.matches].reverse().slice(0, 5); last5matches.forEach(match => { latestResults.innerHTML += generateMatchResultHTML(match, false); }); }
+        function renderStats() { const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); const scorerStats = {}; state.matches.forEach(match => { const team1Stat = teamStats.find(t => t.id === match.teams[0].id); const team2Stat = teamStats.find(t => t.id === match.teams[1].id); if (!team1Stat || !team2Stat) return; team1Stat.played++; team2Stat.played++; team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } match.scorers.forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); }); const sortedScorers = Object.entries(scorerStats).sort(([, a], [, b]) => b - a).slice(0, 10); publicStandings.innerHTML = generateStandingsHTML(teamStats); publicTopScorers.innerHTML = generateTopScorersHTML(sortedScorers); }
+        function renderPublicMatchHistory() { publicMatchHistory.innerHTML = ''; if (state.matches.length === 0) { publicMatchHistory.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } [...state.matches].reverse().forEach(match => { publicMatchHistory.innerHTML += generateMatchResultHTML(match, false); }); }
+        
+        // --- Event Listeners (Admin only) ---
+        addTeamForm.addEventListener('submit', (e) => { e.preventDefault(); if (state.teams.length >= 2) { alert("Ya has añadido los dos equipos de la liga."); return; } const name = document.getElementById('team-name').value; const logo = document.getElementById('team-logo').value; state.teams.push({ id: Date.now(), name, logo }); addTeamForm.reset(); saveData(); });
+        teamsList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-team')) { if(confirm('¿Seguro que quieres borrar el equipo? Esto borrará todos los partidos.')){ state.teams = []; state.matches = []; saveData(); } } });
+        addPlayerForm.addEventListener('submit', (e) => { e.preventDefault(); const name = document.getElementById('player-name').value; if (state.players.includes(name)) { alert('Este jugador ya existe.'); return; } state.players.push(name); addPlayerForm.reset(); saveData(); });
+        playersList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-player')) { const name = e.target.dataset.name; state.players = state.players.filter(p => p !== name); saveData(); } });
+        addMatchForm.addEventListener('submit', e => { e.preventDefault(); const date = document.getElementById('match-date').value; const team1Score = parseInt(document.getElementById('team-1-score').value); const team2Score = parseInt(document.getElementById('team-2-score').value); const scorers = []; const scorerGroups = document.querySelectorAll('.scorer-input-group:not(.hidden)'); let formIsValid = true; scorerGroups.forEach(group => { const player = group.querySelector('.player-select').value; const goals = parseInt(group.querySelector('.goals-input').value); const teamId = parseInt(group.querySelector('.player-select').dataset.teamId); if (player && goals > 0) { scorers.push({ player, goals, teamId }); } else if (player === '') { formIsValid = false; } }); if (!formIsValid) { alert('Debes seleccionar un jugador para cada gol registrado.'); return; } if (team1Score + team2Score !== scorers.reduce((acc, s) => acc + s.goals, 0)) { alert('La suma de goles de los jugadores no coincide con el resultado final del partido.'); return; } const match = { id: Date.now(), date, teams: [{ id: state.teams[0].id, score: team1Score }, { id: state.teams[1].id, score: team2Score }], scorers }; state.matches.push(match); saveData(); addMatchForm.reset(); document.querySelectorAll('.scorer-input-group').forEach(group => group.classList.add('hidden')); });
+        adminMatchHistory.addEventListener('click', (e) => { if (e.target.classList.contains('delete-match')) { const id = parseInt(e.target.dataset.id); state.matches = state.matches.filter(m => m.id !== id); saveData(); } });
+        clearDataButton.addEventListener('click', () => { if (confirm('¿ESTÁS SEGURO? Se borrarán TODOS los equipos, jugadores y partidos de forma PERMANENTE.')) { state.teams = []; state.players = []; state.matches = []; saveData(); } });
+
+        // --- Initial Load ---
+        setView(state.currentView);
+        loadData();
+    </script>
+</body>
+</html>
+
