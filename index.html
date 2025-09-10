@@ -144,7 +144,6 @@
         import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // IMPORTANTE: Pega aquí la configuración de tu proyecto de Firebase
         const firebaseConfig = {
   apiKey: "AIzaSyCh6Eupmi9fpmUqa2K7994jjKUqXdweAUY",
   authDomain: "mongoliga-39101.firebaseapp.com",
@@ -156,8 +155,8 @@
         
         // IMPORTANTE: Pega aquí tu UID de Google como administrador
         const ADMIN_UID = "96GY6i4IDXPQj2aA68Rxc7zoZj02";
- 
-   const app = initializeApp(firebaseConfig);
+
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const leagueDocRef = doc(db, "leagueData", "main");
@@ -450,7 +449,10 @@
             const team1 = getTeamById(match.teams[0].id); 
             const team2 = getTeamById(match.teams[1].id); 
             if(!team1 || !team2) return ''; 
-            const matchScorers = (match.scorers || []).map(s => `<li>${s.player} (${s.goals})</li>`).join(''); 
+            const matchScorers = (match.scorers || []).map(s => {
+                const team = getTeamById(s.teamId);
+                return `<li class="flex items-center gap-2"><img src="${team.logo || 'https://placehold.co/16x16/e2e8f0/64748b?text=L'}" class="w-4 h-4 rounded-full">${s.player} (${s.goals})</li>`;
+            }).join(''); 
             
             return `
             <div class="bg-gray-50 p-4 rounded-lg">
@@ -468,7 +470,7 @@
                         <span>${team2.name}</span>
                     </div>
                 </div>
-                ${matchScorers ? `<details class="mt-2 text-sm"><summary class="cursor-pointer text-gray-600">Ver goleadores</summary><ul class="list-disc pl-5 mt-1">${matchScorers}</ul></details>` : ''}
+                ${matchScorers ? `<details class="mt-2 text-sm"><summary class="cursor-pointer text-gray-600">Ver goleadores</summary><ul class="list-disc pl-5 mt-1 space-y-1">${matchScorers}</ul></details>` : ''}
             </div>`; 
         }
 
@@ -550,28 +552,6 @@
                 </div>
             </div>`;
             openModal(modalHTML);
-            
-            const updateModalScore = () => {
-                let s1=0, s2=0;
-                document.querySelectorAll('#team-1-scorers-modal .scorer-input-group').forEach(g => s1 += parseInt(g.querySelector('.goals-input').value) || 0);
-                document.querySelectorAll('#team-2-scorers-modal .scorer-input-group').forEach(g => s2 += parseInt(g.querySelector('.goals-input').value) || 0);
-                document.getElementById('team-1-score-display').textContent = s1;
-                document.getElementById('team-2-score-display').textContent = s2;
-            };
-
-            const addScorerRowToModal = (teamNum, scorer) => {
-                const container = document.getElementById(`team-${teamNum}-scorers-modal`);
-                const playerOptions = sortedPlayers.map(p => `<option value="${p.name}" ${scorer && scorer.player === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
-                const el = document.createElement('div');
-                el.className = 'scorer-input-group flex gap-2 items-center';
-                el.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md"><option value="">Selecciona...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded" min="1" value="${scorer ? scorer.goals : 1}"><button type="button" class="remove-scorer text-red-500 p-1">✖</button>`;
-                container.insertBefore(el, container.querySelector('.add-scorer-btn'));
-                el.querySelector('.goals-input').oninput = updateModalScore;
-                el.querySelector('.remove-scorer').onclick = () => { el.remove(); updateModalScore(); };
-            };
-            
-            if (isEditing) { (match.scorers || []).forEach(s => addScorerRowToModal(s.teamId === team1.id ? 1 : 2, s)); }
-            updateModalScore();
         };
 
         // --- MANEJADORES DE EVENTOS GLOBALES (DELEGADOS) ---
@@ -579,21 +559,19 @@
             const btn = e.target.closest('button');
             if (!btn) return;
 
-            // Clics en el panel de administración
             if (window.location.hash === '#admin') {
                 const id = parseInt(btn.dataset.id);
 
                 if (btn.id === 'open-match-modal-btn') openMatchModal();
-                if (btn.classList.contains('edit-match')) openMatchModal(id);
-                if (btn.classList.contains('delete-match') && confirm('¿Borrar partido?')) { state.matches = state.matches.filter(m => m.id !== id); saveData(); }
-                if (btn.classList.contains('edit-team')) openEditModal('team', id);
-                if (btn.classList.contains('delete-team') && confirm('¿Seguro?')) { state.teams = state.teams.filter(t => t.id !== id); state.matches = []; saveData(); }
-                if (btn.classList.contains('edit-player')) openEditModal('player', id);
-                if (btn.classList.contains('delete-player')) { const player = getPlayerById(id); if (player && confirm(`¿Borrar a ${player.name}?`)) { state.players = state.players.filter(p => p.id !== id); /* Limpiar datos de partidos */ saveData(); } }
-                if (btn.id === 'clear-data-button' && confirm('¿ESTÁS SEGURO?')) { state.teams=[]; state.players=[]; state.matches=[]; saveData(); }
+                else if (btn.classList.contains('edit-match')) openMatchModal(id);
+                else if (btn.classList.contains('delete-match') && confirm('¿Borrar partido?')) { state.matches = state.matches.filter(m => m.id !== id); saveData(); }
+                else if (btn.classList.contains('edit-team')) openEditModal('team', id);
+                else if (btn.classList.contains('delete-team') && confirm('¿Seguro?')) { state.teams = state.teams.filter(t => t.id !== id); state.matches = []; saveData(); }
+                else if (btn.classList.contains('edit-player')) openEditModal('player', id);
+                else if (btn.classList.contains('delete-player')) { const player = getPlayerById(id); if (player && confirm(`¿Borrar a ${player.name}?`)) { state.players = state.players.filter(p => p.id !== id); /* Limpiar datos de partidos */ saveData(); } }
+                else if (btn.id === 'clear-data-button' && confirm('¿ESTÁS SEGURO?')) { state.teams=[]; state.players=[]; state.matches=[]; saveData(); }
             }
 
-            // Clics en el historial
             if (btn.id === 'toggle-history-btn') {
                 const wrapper = document.getElementById('history-content-wrapper');
                 const arrow = document.getElementById('history-arrow');
@@ -604,7 +582,9 @@
         });
         
         document.getElementById('modal-container').addEventListener('click', e => {
-             const target = e.target;
+             const target = e.target.closest('button');
+             if (!target) return;
+             
              if(target.id === 'cancel-edit-btn' || target.id === 'cancel-match-btn') closeModal();
              if(target.classList.contains('add-scorer-btn')) {
                  const teamNum = parseInt(target.dataset.teamNum);
@@ -627,7 +607,7 @@
              }
 
              if(target.id === 'save-edit-btn') {
-                const form = document.getElementById('edit-form');
+                const form = document.querySelector('#edit-form');
                 const type = form.dataset.type;
                 const id = parseInt(form.dataset.id);
                 const newName = document.getElementById('edit-name').value.trim();
@@ -719,3 +699,4 @@
     </script>
 </body>
 </html>
+
