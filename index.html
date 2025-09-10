@@ -157,7 +157,7 @@
         // IMPORTANTE: Pega aquí tu UID de Google como administrador
         const ADMIN_UID = "96GY6i4IDXPQj2aA68Rxc7zoZj02";
  
-    const app = initializeApp(firebaseConfig);
+   const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const leagueDocRef = doc(db, "leagueData", "main");
@@ -398,12 +398,15 @@
             else {
                 [...state.matches].reverse().forEach(match => {
                     const matchEl = document.createElement('div');
-                    matchEl.innerHTML = generateMatchResultHTML(match, true);
+                    matchEl.innerHTML = generateMatchResultHTML(match);
                     const controls = document.createElement('div');
-                    controls.className = "flex gap-2";
+                    controls.className = "flex gap-2 absolute top-4 right-4";
                     controls.innerHTML = `<button data-id="${match.id}" class="edit-match text-blue-500 hover:text-blue-700 text-sm">✏️</button><button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>`;
-                    matchEl.querySelector('.flex.justify-between.items-center').appendChild(controls);
-                    container.appendChild(matchEl);
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative';
+                    wrapper.appendChild(matchEl);
+                    wrapper.appendChild(controls);
+                    container.appendChild(wrapper);
                 });
             }
         }
@@ -443,7 +446,7 @@
             }).join('')} </ul>`; 
         }
 
-        function generateMatchResultHTML(match, isAdmin = false) { 
+        function generateMatchResultHTML(match) { 
             const team1 = getTeamById(match.teams[0].id); 
             const team2 = getTeamById(match.teams[1].id); 
             if(!team1 || !team2) return ''; 
@@ -465,7 +468,7 @@
                         <span>${team2.name}</span>
                     </div>
                 </div>
-                ${isAdmin && matchScorers ? `<details class="mt-2 text-sm"><summary class="cursor-pointer text-gray-600">Ver goleadores</summary><ul class="list-disc pl-5 mt-1">${matchScorers}</ul></details>` : ''}
+                ${matchScorers ? `<details class="mt-2 text-sm"><summary class="cursor-pointer text-gray-600">Ver goleadores</summary><ul class="list-disc pl-5 mt-1">${matchScorers}</ul></details>` : ''}
             </div>`; 
         }
 
@@ -573,12 +576,11 @@
 
         // --- MANEJADORES DE EVENTOS GLOBALES (DELEGADOS) ---
         document.body.addEventListener('click', e => {
-            const target = e.target;
-            const btn = target.closest('button');
+            const btn = e.target.closest('button');
+            if (!btn) return;
 
             // Clics en el panel de administración
             if (window.location.hash === '#admin') {
-                if (!btn) return;
                 const id = parseInt(btn.dataset.id);
 
                 if (btn.id === 'open-match-modal-btn') openMatchModal();
@@ -592,7 +594,7 @@
             }
 
             // Clics en el historial
-            if (btn && btn.id === 'toggle-history-btn') {
+            if (btn.id === 'toggle-history-btn') {
                 const wrapper = document.getElementById('history-content-wrapper');
                 const arrow = document.getElementById('history-arrow');
                 const isHidden = !wrapper.style.maxHeight || wrapper.style.maxHeight === '0px';
