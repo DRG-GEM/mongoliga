@@ -6,6 +6,7 @@
     <title>Mongoliga</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
@@ -14,6 +15,25 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.5s ease-in-out;
+        }
+        .banner {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Mongolia.svg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .banner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .banner-title {
+            font-family: 'Black Ops One', cursive;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.8);
         }
     </style>
 </head>
@@ -26,9 +46,12 @@
     <div id="auth-container" class="min-h-[60px] flex justify-end p-4"></div>
 
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">🏆 Mongoliga 🏆</h1>
-            <p class="text-gray-600 mt-2">Temporada 2025/26</p>
+        <header class="banner rounded-xl shadow-lg overflow-hidden mb-8 h-48 flex items-center justify-center text-white text-center p-4 relative">
+            <div class="banner-overlay"></div>
+            <div class="relative z-10">
+                <h1 class="banner-title text-5xl md:text-7xl">MONGOLIGA</h1>
+                <p class="text-lg md:text-xl mt-2 font-light">Temporada 2025/26</p>
+            </div>
         </header>
 
         <div id="public-view">
@@ -80,6 +103,7 @@
                         <div id="players-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></div>
                         <form id="add-player-form" class="mt-4 space-y-3">
                             <input type="text" id="player-name" placeholder="Nombre del Jugador" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500" required>
+                            <input type="url" id="player-photo" placeholder="URL de la foto (opcional)" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500">
                             <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors">Añadir Jugador</button>
                         </form>
                     </div>
@@ -125,7 +149,7 @@
         // IMPORTANTE: Pega aquí tu UID de Google como administrador
         const ADMIN_UID = "96GY6i4IDXPQj2aA68Rxc7zoZj02";
 
-        const app = initializeApp(firebaseConfig);
+      const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const leagueDocRef = doc(db, "leagueData", "main");
@@ -200,13 +224,8 @@
             }
         }
 
-        onAuthStateChanged(auth, user => {
-            renderAuthUI(user);
-        });
-        
-        window.addEventListener('hashchange', () => {
-            renderAuthUI(auth.currentUser);
-        }, false);
+        onAuthStateChanged(auth, user => { renderAuthUI(user); });
+        window.addEventListener('hashchange', () => { renderAuthUI(auth.currentUser); }, false);
 
         async function saveData() {
             if (auth.currentUser?.uid !== ADMIN_UID) {
@@ -243,8 +262,23 @@
         }
         
         function render() { if (!state.dataLoaded) return; renderTeams(); renderPlayers(); checkTeamsAndShowMatchForm(); renderMatchFormSelectors(); renderAdminMatchHistory(); renderLatestResults(); renderStats(); renderPublicMatchHistory(); }
+        
         function generateStandingsHTML(teamStats) { if (teamStats.length < 2) return '<p class="text-gray-500">Aún no hay equipos definidos.</p>'; return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover flex-shrink-0"> <span class="break-words">${t.name}</span> </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> </div>`; }
-        function generateTopScorersHTML(sortedScorers) { if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; return ` <ul class="space-y-2"> ${sortedScorers.map(([player, goals], index) => ` <li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-yellow-50' : ''))}"> <span class="font-medium">${index + 1}. ${player}</span> <span class="font-bold text-lg">${goals}</span> </li> `).join('')} </ul>`; }
+        
+        function generateTopScorersHTML(sortedScorers) {
+            if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>';
+            return ` <ul class="space-y-2"> ${sortedScorers.map(([playerName, goals], index) => {
+                const player = state.players.find(p => p.name === playerName);
+                const playerPhoto = player ? player.photo : '';
+                return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}">
+                    <div class="flex items-center gap-3">
+                        <img src="${playerPhoto || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F'}" class="w-8 h-8 rounded-full object-cover bg-gray-300">
+                        <span class="font-medium">${index + 1}. ${playerName}</span>
+                    </div>
+                    <span class="font-bold text-lg">${goals}</span>
+                </li>`
+            }).join('')} </ul>`;
+        }
         
         function generateMatchResultHTML(match, isAdmin = false) { 
             const team1 = state.teams.find(t => t.id === match.teams[0].id); 
@@ -257,14 +291,20 @@
             
             return `
             <div class="bg-gray-50 p-4 rounded-lg">
-                <div class="flex justify-between items-center mb-2">
+                <div class="flex justify-between items-center mb-3">
                     <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                     ${isAdmin ? `<button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>` : ''}
                 </div>
                 <div class="flex items-center text-base sm:text-lg font-bold">
-                    <div class="w-2/5 text-right break-words pr-2">${team1.name}</div>
+                    <div class="w-2/5 flex items-center justify-end gap-3 text-right break-words pr-2">
+                        <span>${team1.name}</span>
+                        <img src="${team1.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
+                    </div>
                     <div class="w-1/5 text-center text-xl sm:text-2xl">${match.teams[0].score}&nbsp;-&nbsp;${match.teams[1].score}</div>
-                    <div class="w-2/5 text-left break-words pl-2">${team2.name}</div>
+                    <div class="w-2/5 flex items-center justify-start gap-3 text-left break-words pl-2">
+                        <img src="${team2.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
+                        <span>${team2.name}</span>
+                    </div>
                 </div>
                 ${isAdmin ? `
                 <details class="mt-2 text-sm">
@@ -275,7 +315,27 @@
         }
 
         function renderTeams() { teamsList.innerHTML = ''; if (state.teams.length === 0) { teamsList.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } else { state.teams.forEach((team) => { const teamEl = document.createElement('div'); teamEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg'; teamEl.innerHTML = `<div class="flex items-center gap-3"><img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" alt="Logo" class="w-10 h-10 rounded-full object-cover"><span class="font-semibold">${team.name}</span></div><button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button>`; teamsList.appendChild(teamEl); }); } }
-        function renderPlayers() { playersList.innerHTML = ''; if (state.players.length === 0) { playersList.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } else { state.players.sort().forEach((player) => { const playerEl = document.createElement('div'); playerEl.className = 'flex justify-between items-center'; playerEl.innerHTML = `<span>${player}</span><button data-name="${player}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>`; playersList.appendChild(playerEl); }); } }
+        
+        function renderPlayers() {
+            playersList.innerHTML = '';
+            if (state.players.length === 0) {
+                playersList.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>';
+            } else {
+                state.players.sort((a, b) => a.name.localeCompare(b.name)).forEach((player) => {
+                    const playerEl = document.createElement('div');
+                    playerEl.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
+                    playerEl.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <img src="${player.photo || 'https://placehold.co/24x24/e2e8f0/64748b?text=%3F'}" class="w-6 h-6 rounded-full object-cover bg-gray-300">
+                            <span>${player.name}</span>
+                        </div>
+                        <button data-id="${player.id}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>
+                    `;
+                    playersList.appendChild(playerEl);
+                });
+            }
+        }
+
         function checkTeamsAndShowMatchForm() { if (state.teams.length >= 2) { addMatchSection.classList.remove('hidden'); document.getElementById('teams-section').querySelector('form').classList.add('hidden'); } else { addMatchSection.classList.add('hidden'); document.getElementById('teams-section').querySelector('form').classList.remove('hidden'); } }
         
         function renderMatchFormSelectors() {
@@ -291,7 +351,7 @@
         function addScorerRow(teamNumber) {
             const container = teamNumber === 1 ? team1Scorers : team2Scorers;
             const teamId = state.teams[teamNumber - 1].id;
-            const playerOptions = state.players.sort().map(p => `<option value="${p}">${p}</option>`).join('');
+            const playerOptions = state.players.sort((a,b) => a.name.localeCompare(b.name)).map(p => `<option value="${p.name}">${p.name}</option>`).join('');
             const scorerEl = document.createElement('div');
             scorerEl.className = 'scorer-input-group flex gap-2 mb-2 items-center';
             scorerEl.innerHTML = `
@@ -300,7 +360,7 @@
                     ${playerOptions}
                 </select>
                 <input type="number" class="goals-input w-1/3 p-2 border rounded-md" min="1" value="1">
-                <button type="button" class="remove-scorer text-red-500 hover:text-red-700 p-2">✖</button>
+                <button type="button" class="remove-scorer text-red-500 hover:text-red-700 p-1">✖</button>
             `;
             container.insertBefore(scorerEl, container.lastElementChild);
             scorerEl.querySelector('.goals-input').addEventListener('input', updateScore);
@@ -313,14 +373,10 @@
 
         function updateScore() {
             let team1Score = 0;
-            document.querySelectorAll('#team-1-scorers .scorer-input-group').forEach(group => {
-                team1Score += parseInt(group.querySelector('.goals-input').value) || 0;
-            });
+            document.querySelectorAll('#team-1-scorers .scorer-input-group').forEach(group => { team1Score += parseInt(group.querySelector('.goals-input').value) || 0; });
             document.getElementById('team-1-score-display').textContent = team1Score;
             let team2Score = 0;
-            document.querySelectorAll('#team-2-scorers .scorer-input-group').forEach(group => {
-                team2Score += parseInt(group.querySelector('.goals-input').value) || 0;
-            });
+            document.querySelectorAll('#team-2-scorers .scorer-input-group').forEach(group => { team2Score += parseInt(group.querySelector('.goals-input').value) || 0; });
             document.getElementById('team-2-score-display').textContent = team2Score;
         }
 
@@ -338,10 +394,7 @@
             }
             const name = document.getElementById('team-name').value;
             const logo = document.getElementById('team-logo').value;
-            if (!name.trim()) {
-                alert("El nombre del equipo no puede estar vacío.");
-                return;
-            }
+            if (!name.trim()) return;
             state.teams.push({ id: Date.now(), name, logo });
             addTeamForm.reset();
             saveData();
@@ -360,24 +413,22 @@
         addPlayerForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const nameInput = document.getElementById('player-name');
+            const photoInput = document.getElementById('player-photo');
             const name = nameInput.value;
-            if (!name.trim()) {
-                alert("El nombre del jugador no puede estar vacío.");
-                return;
-            }
-            if (state.players.find(p => p.toLowerCase() === name.toLowerCase())) {
-                alert('Este jugador ya existe.');
-                return;
-            }
-            state.players.push(name);
-            nameInput.value = '';
+            const photo = photoInput.value;
+
+            if (!name.trim()) { alert("El nombre del jugador no puede estar vacío."); return; }
+            if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) { alert('Este jugador ya existe.'); return; }
+            
+            state.players.push({ id: Date.now(), name, photo });
+            addPlayerForm.reset();
             saveData();
         });
 
         playersList.addEventListener('click', (e) => {
             if (e.target.classList.contains('delete-player')) {
-                const name = e.target.dataset.name;
-                state.players = state.players.filter(p => p !== name);
+                const id = parseInt(e.target.dataset.id);
+                state.players = state.players.filter(p => p.id !== id);
                 saveData();
             }
         });
@@ -385,10 +436,8 @@
         addMatchForm.addEventListener('submit', e => {
             e.preventDefault();
             const date = document.getElementById('match-date').value;
-            if (!date) {
-                alert('Debes seleccionar una fecha para el partido.');
-                return;
-            }
+            if (!date) { alert('Debes seleccionar una fecha para el partido.'); return; }
+
             const team1Score = parseInt(document.getElementById('team-1-score-display').textContent);
             const team2Score = parseInt(document.getElementById('team-2-score-display').textContent);
             const scorers = [];
@@ -398,15 +447,18 @@
                 const goals = parseInt(group.querySelector('.goals-input').value) || 0;
                 const teamId = parseInt(group.querySelector('.player-select').dataset.teamId);
                 if (player && goals > 0) {
-                    scorers.push({ player, goals, teamId });
+                    const existingScorer = scorers.find(s => s.player === player && s.teamId === teamId);
+                    if (existingScorer) {
+                        existingScorer.goals += goals;
+                    } else {
+                        scorers.push({ player, goals, teamId });
+                    }
                 } else if (!player && goals > 0) {
                     formIsValid = false;
                 }
             });
-            if (!formIsValid) {
-                alert('Hay goles asignados a un jugador no seleccionado.');
-                return;
-            }
+            if (!formIsValid) { alert('Hay goles asignados a un jugador no seleccionado.'); return; }
+            
             const match = { id: Date.now(), date, teams: [{ id: state.teams[0].id, score: team1Score }, { id: state.teams[1].id, score: team2Score }], scorers };
             state.matches.push(match);
             saveData();
