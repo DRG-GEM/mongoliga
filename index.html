@@ -10,6 +10,12 @@
         body { font-family: 'Inter', sans-serif; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Estilo para el historial desplegable */
+        .history-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -35,10 +41,6 @@
                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Últimos 5 Partidos</h2>
                         <div id="latest-results" class="space-y-4"></div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md">
-                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Historial Completo</h2>
-                         <div id="public-match-history" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
-                    </div>
                 </div>
                 <div class="lg:col-span-1 space-y-8">
                     <div class="bg-white p-6 rounded-xl shadow-md">
@@ -48,6 +50,18 @@
                     <div class="bg-white p-6 rounded-xl shadow-md">
                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Pichichi</h2>
                         <div id="public-top-scorers"></div>
+                    </div>
+                </div>
+            </div>
+             <!-- Historial Completo Desplegable -->
+            <div class="mt-8">
+                <button id="toggle-history-btn" class="w-full bg-white text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-md hover:bg-gray-50 transition-colors flex justify-between items-center">
+                    <span>Historial Completo de Partidos</span>
+                    <svg id="history-arrow" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="history-content-wrapper" class="history-content mt-2">
+                    <div id="public-match-history" class="bg-white p-6 rounded-xl shadow-md space-y-4 max-h-[40rem] overflow-y-auto">
+                        <!-- El historial se inserta aquí -->
                     </div>
                 </div>
             </div>
@@ -143,6 +157,9 @@
         const publicStandings = document.getElementById('public-standings');
         const publicTopScorers = document.getElementById('public-top-scorers');
         const publicMatchHistory = document.getElementById('public-match-history');
+        const toggleHistoryBtn = document.getElementById('toggle-history-btn');
+        const historyContentWrapper = document.getElementById('history-content-wrapper');
+        const historyArrow = document.getElementById('history-arrow');
 
         const provider = new GoogleAuthProvider();
 
@@ -234,7 +251,7 @@
         function render() { if (!state.dataLoaded) return; renderTeams(); renderPlayers(); checkTeamsAndShowMatchForm(); renderMatchFormSelectors(); renderAdminMatchHistory(); renderLatestResults(); renderStats(); renderPublicMatchHistory(); }
         function generateStandingsHTML(teamStats) { if (teamStats.length < 2) return '<p class="text-gray-500">Aún no hay equipos definidos.</p>'; return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover flex-shrink-0"> <span class="break-words">${t.name}</span> </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> </div>`; }
         function generateTopScorersHTML(sortedScorers) { if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; return ` <ul class="space-y-2"> ${sortedScorers.map(([player, goals], index) => ` <li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-yellow-50' : ''))}"> <span class="font-medium">${index + 1}. ${player}</span> <span class="font-bold text-lg">${goals}</span> </li> `).join('')} </ul>`; }
-        function generateMatchResultHTML(match, isAdmin = false) { const team1 = state.teams.find(t => t.id === match.teams[0].id); const team2 = state.teams.find(t => t.id === match.teams[1].id); if(!team1 || !team2) return ''; const matchScorers = match.scorers.map(s => { const team = state.teams.find(t => t.id === s.teamId); return `<li>${s.player} (${s.goals}) - ${team?.name || 'N/A'}</li>`; }).join(''); return ` <div class="bg-gray-50 p-4 rounded-lg"> <div class="flex justify-between items-center mb-2"> <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span> ${isAdmin ? `<button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>` : ''} </div> <div class="flex justify-between items-center text-base sm:text-xl font-bold"> <span class="flex-1 text-left truncate">${team1.name}</span> <span class="mx-2 sm:mx-4">${match.teams[0].score} - ${match.teams[1].score}</span> <span class="flex-1 text-right truncate">${team2.name}</span> </div> ${isAdmin ? `<details class="mt-2 text-sm"> <summary class="cursor-pointer text-gray-600">Ver goleadores</summary> <ul class="list-disc pl-5 mt-1">${matchScorers || '<li>Sin goles registrados</li>'}</ul> </details>` : ''} </div> `; }
+        function generateMatchResultHTML(match, isAdmin = false) { const team1 = state.teams.find(t => t.id === match.teams[0].id); const team2 = state.teams.find(t => t.id === match.teams[1].id); if(!team1 || !team2) return ''; const matchScorers = match.scorers.map(s => { const team = state.teams.find(t => t.id === s.teamId); return `<li>${s.player} (${s.goals}) - ${team?.name || 'N/A'}</li>`; }).join(''); return ` <div class="bg-gray-50 p-4 rounded-lg"> <div class="flex justify-between items-center mb-2"> <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span> ${isAdmin ? `<button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>` : ''} </div> <div class="grid grid-cols-11 items-center text-base sm:text-lg font-bold"> <span class="col-span-5 text-left break-words">${team1.name}</span> <span class="col-span-1 text-center">${match.teams[0].score} - ${match.teams[1].score}</span> <span class="col-span-5 text-right break-words">${team2.name}</span> </div> ${isAdmin ? `<details class="mt-2 text-sm"> <summary class="cursor-pointer text-gray-600">Ver goleadores</summary> <ul class="list-disc pl-5 mt-1">${matchScorers || '<li>Sin goles registrados</li>'}</ul> </details>` : ''} </div> `; }
         function renderTeams() { teamsList.innerHTML = ''; if (state.teams.length === 0) { teamsList.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } else { state.teams.forEach((team) => { const teamEl = document.createElement('div'); teamEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg'; teamEl.innerHTML = `<div class="flex items-center gap-3"><img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" alt="Logo" class="w-10 h-10 rounded-full object-cover"><span class="font-semibold">${team.name}</span></div><button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button>`; teamsList.appendChild(teamEl); }); } }
         function renderPlayers() { playersList.innerHTML = ''; if (state.players.length === 0) { playersList.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } else { state.players.sort().forEach((player) => { const playerEl = document.createElement('div'); playerEl.className = 'flex justify-between items-center'; playerEl.innerHTML = `<span>${player}</span><button data-name="${player}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>`; playersList.appendChild(playerEl); }); } }
         function checkTeamsAndShowMatchForm() { if (state.teams.length >= 2) { addMatchSection.classList.remove('hidden'); document.getElementById('teams-section').querySelector('form').classList.add('hidden'); } else { addMatchSection.classList.add('hidden'); document.getElementById('teams-section').querySelector('form').classList.remove('hidden'); } }
@@ -287,10 +304,10 @@
 
         function renderAdminMatchHistory() { adminMatchHistory.innerHTML = ''; if (state.matches.length === 0) { adminMatchHistory.innerHTML = '<p class="text-gray-500">Aún no se han jugado partidos.</p>'; } else { [...state.matches].reverse().forEach(match => { adminMatchHistory.innerHTML += generateMatchResultHTML(match, true); }); } }
         function renderLatestResults() { latestResults.innerHTML = ''; if (state.matches.length === 0) { latestResults.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } const last5matches = [...state.matches].reverse().slice(0, 5); last5matches.forEach(match => { latestResults.innerHTML += generateMatchResultHTML(match, false); }); }
-        function renderStats() { const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); const scorerStats = {}; state.matches.forEach(match => { const team1Stat = teamStats.find(t => t.id === match.teams[0].id); const team2Stat = teamStats.find(t => t.id === match.teams[1].id); if (!team1Stat || !team2Stat) return; team1Stat.played++; team2Stat.played++; team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } match.scorers.forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); }); const sortedScorers = Object.entries(scorerStats).sort(([, a], [, b]) => b - a).slice(0, 10); publicStandings.innerHTML = generateStandingsHTML(teamStats); publicTopScorers.innerHTML = generateTopScorersHTML(sortedScorers); }
+        function renderStats() { const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); const scorerStats = {}; state.matches.forEach(match => { const team1Stat = teamStats.find(t => t.id === match.teams[0].id); const team2Stat = teamStats.find(t => t.id === match.teams[1].id); if (!team1Stat || !team2Stat) return; team1Stat.played++; team2Stat.played++; team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } match.scorers.forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); }); const sortedScorers = Object.entries(scorerStats).sort((a, b) => { if (b[1] !== a[1]) { return b[1] - a[1]; } return a[0].localeCompare(b[0]); }).slice(0, 10); publicStandings.innerHTML = generateStandingsHTML(teamStats); publicTopScorers.innerHTML = generateTopScorersHTML(sortedScorers); }
         function renderPublicMatchHistory() { publicMatchHistory.innerHTML = ''; if (state.matches.length === 0) { publicMatchHistory.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } [...state.matches].reverse().forEach(match => { publicMatchHistory.innerHTML += generateMatchResultHTML(match, false); }); }
         
-        // --- Event Listeners (Admin only) ---
+        // --- Event Listeners ---
         addTeamForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if (state.teams.length >= 2) {
@@ -377,6 +394,17 @@
         
         adminMatchHistory.addEventListener('click', (e) => { if (e.target.classList.contains('delete-match')) { if (confirm("¿Seguro que quieres borrar este partido?")) { const id = parseInt(e.target.dataset.id); state.matches = state.matches.filter(m => m.id !== id); saveData(); } } });
         clearDataButton.addEventListener('click', () => { if (confirm('¿ESTÁS SEGURO? Se borrarán TODOS los datos de forma PERMANENTE.')) { state.teams = []; state.players = []; state.matches = []; saveData(); } });
+        
+        toggleHistoryBtn.addEventListener('click', () => {
+            const isHidden = historyContentWrapper.style.maxHeight === '0px' || historyContentWrapper.style.maxHeight === '';
+            if (isHidden) {
+                historyContentWrapper.style.maxHeight = historyContentWrapper.scrollHeight + "px";
+                historyArrow.style.transform = 'rotate(180deg)';
+            } else {
+                historyContentWrapper.style.maxHeight = '0px';
+                historyArrow.style.transform = 'rotate(0deg)';
+            }
+        });
 
         loadData();
     </script>
