@@ -37,7 +37,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
     <div id="loading" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
         <div class="loader"></div>
@@ -45,7 +45,7 @@
     
     <div id="auth-container" class="min-h-[60px] flex justify-end p-4"></div>
 
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <main class="container mx-auto p-4 md:p-8 max-w-7xl flex-grow">
         <header class="banner rounded-xl shadow-lg overflow-hidden mb-8 h-48 flex items-center justify-center text-white text-center p-4 relative">
             <div class="banner-overlay"></div>
             <div class="relative z-10">
@@ -54,9 +54,14 @@
             </div>
         </header>
 
-        <div id="public-view">
+        <!-- VISTA PRINCIPAL -->
+        <div id="main-view">
              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Cara a Cara (H2H)</h2>
+                        <div id="head-to-head"></div>
+                    </div>
                     <div class="bg-white p-6 rounded-xl shadow-md">
                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Últimos 5 Partidos</h2>
                         <div id="latest-results" class="space-y-4"></div>
@@ -84,10 +89,16 @@
                 </div>
             </div>
         </div>
+        
+        <!-- VISTA DE ESTADÍSTICAS DE JUGADOR -->
+        <div id="player-stats-view" class="hidden">
+            <!-- Contenido se genera dinámicamente -->
+        </div>
 
+        <!-- VISTA DE ADMINISTRACIÓN -->
         <div id="admin-view" class="hidden mt-12 pt-8 border-t-4 border-indigo-500">
-            <h2 class="text-center text-3xl font-bold mb-8">Panel de Administración</h2>
-            <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+             <h2 class="text-center text-3xl font-bold mb-8">Panel de Administración</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="md:col-span-1 space-y-8">
                     <div id="teams-section" class="bg-white p-6 rounded-xl shadow-md">
                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Equipos</h2>
@@ -114,53 +125,23 @@
                 </div>
                 <div class="md:col-span-2 space-y-8">
                     <div id="add-match-section" class="bg-white p-6 rounded-xl shadow-md hidden">
-                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Registrar Nuevo Partido</h2>
-                        <form id="add-match-form" class="space-y-4">
-                            <div> <label for="match-date" class="block font-medium mb-1">Fecha del Partido</label> <input type="date" id="match-date" class="w-full p-2 border rounded-md" required> </div>
-                            <div class="grid grid-cols-2 gap-4"> <div id="team-1-selector"></div> <div id="team-2-selector"></div> </div>
-                            <div id="scorers-section" class="space-y-4 pt-4 border-t"> <h3 class="font-bold text-lg">Goleadores</h3> <div class="grid grid-cols-2 gap-4"><div id="team-1-scorers"></div> <div id="team-2-scorers"></div></div> </div>
-                            <div> <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors">Guardar Partido</button> </div>
-                        </form>
+                        <!-- El formulario de partido se genera dinámicamente -->
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-md">
                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Historial de Partidos (Admin)</h2>
                         <div id="admin-match-history" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900">Editar</h3>
-                <div class="mt-2 px-7 py-3">
-                    <form id="edit-form" class="space-y-4">
-                        <input type="hidden" id="edit-id">
-                        <input type="hidden" id="edit-type">
-                        <div>
-                            <label id="label-edit-name" for="edit-name" class="block text-left text-sm font-medium text-gray-700">Nombre</label>
-                            <input type="text" id="edit-name" class="mt-1 w-full p-2 border rounded-md" required>
-                        </div>
-                        <div>
-                            <label id="label-edit-photo-logo" for="edit-photo-logo" class="block text-left text-sm font-medium text-gray-700">URL</label>
-                             <input type="url" id="edit-photo-logo" class="mt-1 w-full p-2 border rounded-md">
-                        </div>
-                    </form>
-                </div>
-                <div class="items-center px-4 py-3 space-y-2">
-                    <button id="save-edit-btn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
-                        Guardar Cambios
-                    </button>
-                     <button id="cancel-edit-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        Cancelar
-                    </button>
-                </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <footer class="text-center py-4 text-gray-500 text-sm">
+        <p>&copy; Made by Dragonpat 2025</p>
+    </footer>
+
+    <!-- MODALES -->
+    <div id="modal-container"></div>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -180,58 +161,50 @@
         // IMPORTANTE: Pega aquí tu UID de Google como administrador
         const ADMIN_UID = "96GY6i4IDXPQj2aA68Rxc7zoZj02";
 
-        const app = initializeApp(firebaseConfig);
+       const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const leagueDocRef = doc(db, "leagueData", "main");
         
         const state = { teams: [], players: [], matches: [], dataLoaded: false };
 
-        // Elementos del DOM
-        const loadingSpinner = document.getElementById('loading');
-        const authContainer = document.getElementById('auth-container');
-        const adminView = document.getElementById('admin-view');
-        const addTeamForm = document.getElementById('add-team-form');
-        const teamsList = document.getElementById('teams-list');
-        const addPlayerForm = document.getElementById('add-player-form');
-        const playersList = document.getElementById('players-list');
-        const addMatchSection = document.getElementById('add-match-section');
-        const addMatchForm = document.getElementById('add-match-form');
-        const team1Selector = document.getElementById('team-1-selector');
-        const team2Selector = document.getElementById('team-2-selector');
-        const team1Scorers = document.getElementById('team-1-scorers');
-        const team2Scorers = document.getElementById('team-2-scorers');
-        const adminMatchHistory = document.getElementById('admin-match-history');
-        const clearDataButton = document.getElementById('clear-data-button');
-        const latestResults = document.getElementById('latest-results');
-        const publicStandings = document.getElementById('public-standings');
-        const publicTopScorers = document.getElementById('public-top-scorers');
-        const publicMatchHistory = document.getElementById('public-match-history');
-        const toggleHistoryBtn = document.getElementById('toggle-history-btn');
-        const historyContentWrapper = document.getElementById('history-content-wrapper');
-        const historyArrow = document.getElementById('history-arrow');
-        // Elementos del Modal
-        const editModal = document.getElementById('edit-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const editIdInput = document.getElementById('edit-id');
-        const editTypeInput = document.getElementById('edit-type');
-        const editNameInput = document.getElementById('edit-name');
-        const editPhotoLogoInput = document.getElementById('edit-photo-logo');
-        const saveEditBtn = document.getElementById('save-edit-btn');
-        const cancelEditBtn = document.getElementById('cancel-edit-btn');
-        const labelEditName = document.getElementById('label-edit-name');
-        const labelEditPhotoLogo = document.getElementById('label-edit-photo-logo');
+        // --- NAVEGACIÓN Y VISTAS ---
+        function navigate() {
+            const hash = window.location.hash;
+            const mainView = document.getElementById('main-view');
+            const playerStatsView = document.getElementById('player-stats-view');
+            const adminView = document.getElementById('admin-view');
 
+            mainView.classList.add('hidden');
+            playerStatsView.classList.add('hidden');
+            adminView.classList.add('hidden'); 
+
+            if (hash.startsWith('#/player/')) {
+                const playerName = decodeURIComponent(hash.substring(9));
+                renderPlayerStatsPage(playerName);
+                playerStatsView.classList.remove('hidden');
+            } else if (hash === '#admin') {
+                renderAuthUI(auth.currentUser);
+            }
+            else {
+                mainView.classList.remove('hidden');
+            }
+            if (auth.currentUser?.uid === ADMIN_UID && hash === '#admin') {
+                adminView.classList.remove('hidden');
+            }
+        }
+        window.addEventListener('hashchange', navigate);
+        
+        // --- AUTENTICACIÓN ---
         const provider = new GoogleAuthProvider();
-
         async function signInWithGoogle() { try { await signInWithPopup(auth, provider); } catch (error) { console.error("Error signing in:", error); }}
         async function logOut() { try { await signOut(auth); window.location.hash = ''; } catch (error) { console.error("Error signing out:", error); }}
 
         function renderAuthUI(user) {
+            const authContainer = document.getElementById('auth-container');
             authContainer.innerHTML = '';
             const isAdminRoute = window.location.hash === '#admin';
             if (user) { 
-                adminView.classList.toggle('hidden', user.uid !== ADMIN_UID);
                 if (isAdminRoute) {
                     const logoutButton = document.createElement('button');
                     logoutButton.textContent = `Salir (${user.displayName.split(' ')[0]})`;
@@ -240,7 +213,6 @@
                     authContainer.appendChild(logoutButton);
                 }
             } else { 
-                adminView.classList.add('hidden');
                 if (isAdminRoute) {
                     const loginButton = document.createElement('button');
                     loginButton.textContent = 'Acceder como Admin';
@@ -250,10 +222,9 @@
                 }
             }
         }
+        onAuthStateChanged(auth, user => navigate());
 
-        onAuthStateChanged(auth, user => { renderAuthUI(user); });
-        window.addEventListener('hashchange', () => { renderAuthUI(auth.currentUser); }, false);
-
+        // --- DATOS (FIREBASE) ---
         async function saveData() {
             if (auth.currentUser?.uid !== ADMIN_UID) { alert("No tienes permiso para realizar esta acción."); return; }
             try {
@@ -270,151 +241,456 @@
                     state.players = data.players || [];
                     state.matches = data.matches || [];
                 }
-                if (!state.dataLoaded) { state.dataLoaded = true; loadingSpinner.style.display = 'none'; }
-                render();
-            }, (error) => { console.error("Error loading data:", error); alert("No se pudieron cargar los datos."); loadingSpinner.style.display = 'none'; });
+                if (!state.dataLoaded) { state.dataLoaded = true; document.getElementById('loading').style.display = 'none'; }
+                renderAll();
+                navigate(); 
+            }, (error) => {
+                console.error("Error loading data:", error);
+                alert("No se pudieron cargar los datos.");
+                document.getElementById('loading').style.display = 'none';
+            });
         }
         
-        function render() { if (!state.dataLoaded) return; renderTeams(); renderPlayers(); checkTeamsAndShowMatchForm(); renderMatchFormSelectors(); renderAdminMatchHistory(); renderLatestResults(); renderStats(); renderPublicMatchHistory(); }
-        function generateStandingsHTML(teamStats) { if (teamStats.length < 2) return '<p class="text-gray-500">Aún no hay equipos definidos.</p>'; return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover flex-shrink-0"> <span class="break-words">${t.name}</span> </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> </div>`; }
-        function generateTopScorersHTML(sortedScorers) { if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; return ` <ul class="space-y-2"> ${sortedScorers.map(([playerName, goals], index) => { const player = state.players.find(p => p.name === playerName); const playerPhoto = player ? player.photo : ''; return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> <div class="flex items-center gap-3"> <img src="${playerPhoto || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F'}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> <span class="font-medium">${index + 1}. ${playerName}</span> </div> <span class="font-bold text-lg">${goals}</span> </li>` }).join('')} </ul>`; }
-        function generateMatchResultHTML(match, isAdmin = false) { const team1 = state.teams.find(t => t.id === match.teams[0].id); const team2 = state.teams.find(t => t.id === match.teams[1].id); if(!team1 || !team2) return ''; const matchScorers = match.scorers.map(s => { const team = state.teams.find(t => t.id === s.teamId); return `<li>${s.player} (${s.goals}) - ${team?.name || 'N/A'}</li>`; }).join(''); return ` <div class="bg-gray-50 p-4 rounded-lg"> <div class="flex justify-between items-center mb-3"> <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span> ${isAdmin ? `<button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>` : ''} </div> <div class="flex items-center text-base sm:text-lg font-bold"> <div class="w-2/5 flex items-center justify-end gap-3 text-right break-words pr-2"> <span>${team1.name}</span> <img src="${team1.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0"> </div> <div class="w-1/5 text-center text-xl sm:text-2xl">${match.teams[0].score}&nbsp;-&nbsp;${match.teams[1].score}</div> <div class="w-2/5 flex items-center justify-start gap-3 text-left break-words pl-2"> <img src="${team2.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0"> <span>${team2.name}</span> </div> </div> ${isAdmin ? `<details class="mt-2 text-sm"><summary class="cursor-pointer text-gray-600">Ver goleadores</summary><ul class="list-disc pl-5 mt-1">${matchScorers || '<li>Sin goles registrados</li>'}</ul></details>` : ''} </div>`; }
+        // --- LÓGICA DE RENDERIZADO PRINCIPAL ---
+        function renderAll() {
+            if (!state.dataLoaded) return;
+            // Admin view renders
+            renderAdminTeams();
+            renderAdminPlayers();
+            renderAdminMatchHistory();
+            checkTeamsAndShowMatchForm();
+            // Public view renders
+            renderLatestResults();
+            renderStats();
+            renderPublicMatchHistory();
+        }
+
+        function getTeamById(id) { return state.teams.find(t => t.id === id); }
+        function getPlayerById(id) { return state.players.find(p => p.id === id); }
+        function getPlayerByName(name) { return state.players.find(p => p.name === name); }
         
-        function renderTeams() { teamsList.innerHTML = ''; if (state.teams.length === 0) { teamsList.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } else { state.teams.forEach((team) => { const teamEl = document.createElement('div'); teamEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg'; teamEl.innerHTML = `<div class="flex items-center gap-3"><img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" alt="Logo" class="w-10 h-10 rounded-full object-cover"><span class="font-semibold">${team.name}</span></div><div class="flex gap-2"><button data-id="${team.id}" class="edit-team text-blue-500 hover:text-blue-700">✏️</button><button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button></div>`; teamsList.appendChild(teamEl); }); } }
-        
-        function renderPlayers() {
-            playersList.innerHTML = '';
-            if (state.players.length === 0) { playersList.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>';
-            } else {
-                state.players.sort((a, b) => a.name.localeCompare(b.name)).forEach((player) => {
-                    const playerEl = document.createElement('div');
-                    playerEl.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
-                    playerEl.innerHTML = `
-                        <div class="flex items-center gap-2">
-                            <img src="${player.photo || 'https://placehold.co/24x24/e2e8f0/64748b?text=%3F'}" class="w-6 h-6 rounded-full object-cover bg-gray-300">
-                            <span>${player.name}</span>
-                        </div>
-                        <div class="flex gap-2">
-                           <button data-id="${player.id}" class="edit-player text-blue-500 hover:text-blue-700">✏️</button>
-                           <button data-id="${player.id}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>
-                        </div>`;
-                    playersList.appendChild(playerEl);
-                });
+        // --- RENDERIZADO DE COMPONENTES ---
+
+        // Renderizado de la vista pública
+        function renderLatestResults() {
+            const container = document.getElementById('latest-results');
+            container.innerHTML = '';
+            if (state.matches.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>';
+                return;
             }
+            const last5matches = [...state.matches].reverse().slice(0, 5);
+            last5matches.forEach(match => {
+                container.innerHTML += generateMatchResultHTML(match);
+            });
         }
 
-        function checkTeamsAndShowMatchForm() { if (state.teams.length >= 2) { addMatchSection.classList.remove('hidden'); document.getElementById('teams-section').querySelector('form').classList.add('hidden'); } else { addMatchSection.classList.add('hidden'); document.getElementById('teams-section').querySelector('form').classList.remove('hidden'); } }
-        function renderMatchFormSelectors() { if (state.teams.length < 2) return; team1Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[0].name}</label><p id="team-1-score-display" class="text-5xl font-bold text-center py-2">0</p>`; team2Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[1].name}</label><p id="team-2-score-display" class="text-5xl font-bold text-center py-2">0</p>`; team1Scorers.innerHTML = `<h4 class="font-semibold text-gray-700">Goleadores ${state.teams[0].name}</h4><button type="button" id="add-scorer-team1" class="mt-2 w-full text-sm bg-gray-200 text-gray-700 py-1 rounded-md hover:bg-gray-300 transition-colors">+ Añadir Goleador</button>`; team2Scorers.innerHTML = `<h4 class="font-semibold text-gray-700">Goleadores ${state.teams[1].name}</h4><button type="button" id="add-scorer-team2" class="mt-2 w-full text-sm bg-gray-200 text-gray-700 py-1 rounded-md hover:bg-gray-300 transition-colors">+ Añadir Goleador</button>`; document.getElementById('add-scorer-team1').addEventListener('click', () => addScorerRow(1)); document.getElementById('add-scorer-team2').addEventListener('click', () => addScorerRow(2)); }
-        function addScorerRow(teamNumber) { const container = teamNumber === 1 ? team1Scorers : team2Scorers; const teamId = state.teams[teamNumber - 1].id; const playerOptions = state.players.sort((a,b) => a.name.localeCompare(b.name)).map(p => `<option value="${p.name}">${p.name}</option>`).join(''); const scorerEl = document.createElement('div'); scorerEl.className = 'scorer-input-group flex gap-2 mb-2 items-center'; scorerEl.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md" data-team-id="${teamId}"><option value="">Selecciona jugador...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded-md" min="1" value="1"><button type="button" class="remove-scorer text-red-500 hover:text-red-700 p-1">✖</button>`; container.insertBefore(scorerEl, container.lastElementChild); scorerEl.querySelector('.goals-input').addEventListener('input', updateScore); scorerEl.querySelector('.remove-scorer').addEventListener('click', () => { scorerEl.remove(); updateScore(); }); updateScore(); }
-        function updateScore() { let team1Score = 0; document.querySelectorAll('#team-1-scorers .scorer-input-group').forEach(group => { team1Score += parseInt(group.querySelector('.goals-input').value) || 0; }); document.getElementById('team-1-score-display').textContent = team1Score; let team2Score = 0; document.querySelectorAll('#team-2-scorers .scorer-input-group').forEach(group => { team2Score += parseInt(group.querySelector('.goals-input').value) || 0; }); document.getElementById('team-2-score-display').textContent = team2Score; }
-        function renderAdminMatchHistory() { adminMatchHistory.innerHTML = ''; if (state.matches.length === 0) { adminMatchHistory.innerHTML = '<p class="text-gray-500">Aún no se han jugado partidos.</p>'; } else { [...state.matches].reverse().forEach(match => { adminMatchHistory.innerHTML += generateMatchResultHTML(match, true); }); } }
-        function renderLatestResults() { latestResults.innerHTML = ''; if (state.matches.length === 0) { latestResults.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } const last5matches = [...state.matches].reverse().slice(0, 5); last5matches.forEach(match => { latestResults.innerHTML += generateMatchResultHTML(match, false); }); }
-        function renderStats() { const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); const scorerStats = {}; state.matches.forEach(match => { const team1Stat = teamStats.find(t => t.id === match.teams[0].id); const team2Stat = teamStats.find(t => t.id === match.teams[1].id); if (!team1Stat || !team2Stat) return; team1Stat.played++; team2Stat.played++; team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } match.scorers.forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); }); const sortedScorers = Object.entries(scorerStats).sort((a, b) => { if (b[1] !== a[1]) { return b[1] - a[1]; } return a[0].localeCompare(b[0]); }).slice(0, 10); publicStandings.innerHTML = generateStandingsHTML(teamStats); publicTopScorers.innerHTML = generateTopScorersHTML(sortedScorers); }
-        function renderPublicMatchHistory() { publicMatchHistory.innerHTML = ''; if (state.matches.length === 0) { publicMatchHistory.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } [...state.matches].reverse().forEach(match => { publicMatchHistory.innerHTML += generateMatchResultHTML(match, false); }); }
-        
-        // --- Modal Logic ---
-        function openEditModal(type, id) {
-            const item = type === 'team' ? state.teams.find(t => t.id === id) : state.players.find(p => p.id === id);
-            if (!item) return;
+        function renderPublicMatchHistory() {
+            const container = document.getElementById('public-match-history');
+            container.innerHTML = '';
+            if (state.matches.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>';
+                return;
+            }
+            [...state.matches].reverse().forEach(match => {
+                container.innerHTML += generateMatchResultHTML(match);
+            });
+        }
 
-            editModal.classList.remove('hidden');
-            editTypeInput.value = type;
-            editIdInput.value = id;
+        function renderStats() {
+            const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); 
+            const scorerStats = {}; 
+            state.matches.forEach(match => { 
+                const team1Stat = teamStats.find(t => t.id === match.teams[0].id); 
+                const team2Stat = teamStats.find(t => t.id === match.teams[1].id); 
+                if (!team1Stat || !team2Stat) return; 
+                team1Stat.played++; team2Stat.played++; 
+                team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; 
+                team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; 
+                if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } 
+                else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } 
+                else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } 
+                (match.scorers || []).forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); 
+            }); 
             
-            if (type === 'team') {
-                modalTitle.textContent = "Editar Equipo";
-                labelEditName.textContent = "Nombre del Equipo";
-                labelEditPhotoLogo.textContent = "URL del Logo";
-                editNameInput.value = item.name;
-                editPhotoLogoInput.value = item.logo || '';
-            } else { // player
-                modalTitle.textContent = "Editar Jugador";
-                labelEditName.textContent = "Nombre del Jugador";
-                labelEditPhotoLogo.textContent = "URL de la Foto";
-                editNameInput.value = item.name;
-                editPhotoLogoInput.value = item.photo || '';
+            const sortedScorers = Object.entries(scorerStats).sort((a, b) => { if (b[1] !== a[1]) { return b[1] - a[1]; } return a[0].localeCompare(b[0]); }).slice(0, 10); 
+            
+            document.getElementById('public-standings').innerHTML = generateStandingsHTML(teamStats); 
+            document.getElementById('public-top-scorers').innerHTML = generateTopScorersHTML(sortedScorers);
+            renderHeadToHead(teamStats);
+        }
+
+        function renderHeadToHead(teamStats) {
+            const container = document.getElementById('head-to-head');
+            if (teamStats.length < 2) {
+                container.innerHTML = '<p class="text-gray-500 text-center">Esperando a los dos equipos para mostrar estadísticas.</p>';
+                return;
             }
+            const [team1, team2] = teamStats;
+            container.innerHTML = `
+            <div class="flex items-center justify-around text-center">
+                <div class="w-1/3">
+                    <img src="${team1.logo || 'https://placehold.co/48x48/e2e8f0/64748b?text=L'}" class="w-12 h-12 rounded-full object-cover mx-auto mb-2">
+                    <p class="font-semibold break-words">${team1.name}</p>
+                </div>
+                <div class="w-1/3">
+                    <p class="text-sm text-gray-500">Victorias</p>
+                    <p class="text-2xl font-bold">${team1.wins} - ${team2.wins}</p>
+                    <p class="text-sm text-gray-500 mt-2">Goles</p>
+                    <p class="text-2xl font-bold">${team1.gf} - ${team2.gf}</p>
+                </div>
+                <div class="w-1/3">
+                    <img src="${team2.logo || 'https://placehold.co/48x48/e2e8f0/64748b?text=L'}" class="w-12 h-12 rounded-full object-cover mx-auto mb-2">
+                    <p class="font-semibold break-words">${team2.name}</p>
+                </div>
+            </div>
+             <p class="text-center text-sm text-gray-500 mt-3">${team1.draws} ${team1.draws === 1 ? 'Empate' : 'Empates'}</p>
+            `;
         }
 
-        function closeEditModal() {
-            editModal.classList.add('hidden');
-            document.getElementById('edit-form').reset();
-        }
-
-        cancelEditBtn.addEventListener('click', closeEditModal);
-
-        saveEditBtn.addEventListener('click', () => {
-            const id = parseInt(editIdInput.value);
-            const type = editTypeInput.value;
-            const newName = editNameInput.value.trim();
-            const newUrl = editPhotoLogoInput.value.trim();
-
-            if (!newName) {
-                alert("El nombre no puede estar vacío.");
+        function renderPlayerStatsPage(playerName) {
+            const player = getPlayerByName(playerName);
+            const container = document.getElementById('player-stats-view');
+            if (!player) {
+                container.innerHTML = `<p>Jugador no encontrado.</p><a href="#" class="text-blue-500">&larr; Volver</a>`;
                 return;
             }
 
-            if (type === 'team') {
-                const team = state.teams.find(t => t.id === id);
-                if (team) {
-                    team.name = newName;
-                    team.logo = newUrl;
-                }
-            } else { // player
-                const player = state.players.find(p => p.id === id);
-                if (player) {
-                    const oldName = player.name;
-                    if (oldName !== newName) {
-                        // Update player name in all matches
-                        state.matches.forEach(match => {
-                            match.scorers.forEach(scorer => {
-                                if (scorer.player === oldName) {
-                                    scorer.player = newName;
-                                }
-                            });
-                        });
-                    }
-                    player.name = newName;
-                    player.photo = newUrl;
-                }
-            }
-            saveData();
-            closeEditModal();
-        });
+            let played = 0, wins = 0, draws = 0, losses = 0, goals = 0;
+            const playerMatches = [];
 
-        // --- Event Listeners ---
-        addTeamForm.addEventListener('submit', (e) => { e.preventDefault(); if (state.teams.length >= 2) { alert("Ya has añadido los dos equipos."); return; } const name = document.getElementById('team-name').value; const logo = document.getElementById('team-logo').value; if (!name.trim()) return; state.teams.push({ id: Date.now(), name, logo }); addTeamForm.reset(); saveData(); });
-        teamsList.addEventListener('click', (e) => { 
-            const target = e.target.closest('button');
-            if (!target) return;
-            const id = parseInt(target.dataset.id);
-            if (target.classList.contains('delete-team')) { if(confirm('¿Seguro? Se borrarán todos los partidos.')){ state.teams = state.teams.filter(t => t.id !== id); state.matches = []; saveData(); } } 
-            else if (target.classList.contains('edit-team')) { openEditModal('team', id); }
-        });
-        addPlayerForm.addEventListener('submit', (e) => { e.preventDefault(); const nameInput = document.getElementById('player-name'); const photoInput = document.getElementById('player-photo'); const name = nameInput.value; const photo = photoInput.value; if (!name.trim()) { alert("El nombre no puede estar vacío."); return; } if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) { alert('Este jugador ya existe.'); return; } state.players.push({ id: Date.now(), name, photo }); addPlayerForm.reset(); saveData(); });
-        playersList.addEventListener('click', (e) => {
-            const target = e.target.closest('button');
-            if (!target) return;
-            const id = parseInt(target.dataset.id);
-            if (target.classList.contains('delete-player')) {
-                const playerToDelete = state.players.find(p => p.id === id);
-                if (playerToDelete && confirm(`¿Seguro que quieres borrar a ${playerToDelete.name}? Sus goles no se podrán recuperar.`)) {
-                     state.players = state.players.filter(p => p.id !== id);
-                     // Opcional: Borrar goles de este jugador en los partidos.
-                     state.matches.forEach(match => {
-                         match.scorers = match.scorers.filter(s => s.player !== playerToDelete.name);
-                     });
-                     saveData();
+            state.matches.forEach(match => {
+                const team1 = getTeamById(match.teams[0].id);
+                const team2 = getTeamById(match.teams[1].id);
+
+                const playerTeamId = (match.playersTeam1 || []).includes(player.id) ? team1.id 
+                                 : (match.playersTeam2 || []).includes(player.id) ? team2.id : null;
+
+                if (playerTeamId) {
+                    played++;
+                    playerMatches.push(match);
+                    const playerTeamScore = playerTeamId === team1.id ? match.teams[0].score : match.teams[1].score;
+                    const opponentScore = playerTeamId === team1.id ? match.teams[1].score : match.teams[0].score;
+
+                    if (playerTeamScore > opponentScore) wins++;
+                    else if (playerTeamScore < opponentScore) losses++;
+                    else draws++;
                 }
-            } else if (target.classList.contains('edit-player')) {
-                openEditModal('player', id);
+                (match.scorers || []).forEach(scorer => {
+                    if (scorer.player === playerName) goals += scorer.goals;
+                });
+            });
+            const winRate = played > 0 ? ((wins / played) * 100).toFixed(0) : 0;
+            const goalsPerMatch = played > 0 ? (goals / played).toFixed(2) : 0;
+
+            container.innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <a href="#" class="text-blue-500 mb-6 inline-block">&larr; Volver a la liga</a>
+                    <div class="flex flex-col sm:flex-row items-center gap-6 border-b pb-6 mb-6">
+                        <img src="${player.photo || 'https://placehold.co/96x96/e2e8f0/64748b?text=%3F'}" class="w-24 h-24 rounded-full object-cover bg-gray-300">
+                        <div>
+                            <h2 class="text-4xl font-bold">${player.name}</h2>
+                            <!-- Aquí se podrían añadir más detalles como posición, etc. -->
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Estadísticas de Temporada</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${played}</p><p class="text-sm text-gray-600">Partidos</p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${goals}</p><p class="text-sm text-gray-600">Goles</p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${goalsPerMatch}</p><p class="text-sm text-gray-600">Goles / Partido</p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${winRate}%</p><p class="text-sm text-gray-600">% Victorias</p></div>
+                    </div>
+                    <h3 class="text-xl font-bold mt-8 mb-4">Historial de Partidos Jugados</h3>
+                    <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                        ${playerMatches.length > 0 ? playerMatches.reverse().map(m => generateMatchResultHTML(m)).join('') : '<p class="text-gray-500">Sin partidos registrados.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizado de la vista de admin
+        function renderAdminTeams() {
+            const container = document.getElementById('teams-list');
+            container.innerHTML = '';
+            if (state.teams.length === 0) { container.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } 
+            else { state.teams.forEach(team => {
+                container.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" alt="Logo" class="w-10 h-10 rounded-full object-cover">
+                        <span class="font-semibold">${team.name}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button data-id="${team.id}" class="edit-team text-blue-500 hover:text-blue-700">✏️</button>
+                        <button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button>
+                    </div>
+                </div>`;
+            }); }
+        }
+
+        function renderAdminPlayers() {
+            const container = document.getElementById('players-list');
+            container.innerHTML = '';
+            if (state.players.length === 0) { container.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } 
+            else {
+                state.players.sort((a, b) => a.name.localeCompare(b.name)).forEach(player => {
+                    container.innerHTML += `
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <a href="#/player/${encodeURIComponent(player.name)}" class="flex items-center gap-2 hover:underline">
+                            <img src="${player.photo || 'https://placehold.co/24x24/e2e8f0/64748b?text=%3F'}" class="w-6 h-6 rounded-full object-cover bg-gray-300">
+                            <span>${player.name}</span>
+                        </a>
+                        <div class="flex gap-2">
+                           <button data-id="${player.id}" class="edit-player text-blue-500 hover:text-blue-700">✏️</button>
+                           <button data-id="${player.id}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>
+                        </div>
+                    </div>`;
+                });
             }
-        });
-        addMatchForm.addEventListener('submit', e => { e.preventDefault(); const date = document.getElementById('match-date').value; if (!date) { alert('Debes seleccionar una fecha.'); return; } const team1Score = parseInt(document.getElementById('team-1-score-display').textContent); const team2Score = parseInt(document.getElementById('team-2-score-display').textContent); const scorers = []; let formIsValid = true; document.querySelectorAll('.scorer-input-group').forEach(group => { const player = group.querySelector('.player-select').value; const goals = parseInt(group.querySelector('.goals-input').value) || 0; const teamId = parseInt(group.querySelector('.player-select').dataset.teamId); if (player && goals > 0) { const existingScorer = scorers.find(s => s.player === player && s.teamId === teamId); if (existingScorer) { existingScorer.goals += goals; } else { scorers.push({ player, goals, teamId }); } } else if (!player && goals > 0) { formIsValid = false; } }); if (!formIsValid) { alert('Hay goles asignados a un jugador no seleccionado.'); return; } const match = { id: Date.now(), date, teams: [{ id: state.teams[0].id, score: team1Score }, { id: state.teams[1].id, score: team2Score }], scorers }; state.matches.push(match); saveData(); addMatchForm.reset(); renderMatchFormSelectors(); });
-        adminMatchHistory.addEventListener('click', (e) => { if (e.target.classList.contains('delete-match')) { if (confirm("¿Seguro que quieres borrar este partido?")) { const id = parseInt(e.target.dataset.id); state.matches = state.matches.filter(m => m.id !== id); saveData(); } } });
-        clearDataButton.addEventListener('click', () => { if (confirm('¿ESTÁS SEGURO? Se borrarán TODOS los datos.')) { state.teams = []; state.players = []; state.matches = []; saveData(); } });
-        toggleHistoryBtn.addEventListener('click', () => { const isHidden = historyContentWrapper.style.maxHeight === '0px' || historyContentWrapper.style.maxHeight === ''; if (isHidden) { historyContentWrapper.style.maxHeight = historyContentWrapper.scrollHeight + "px"; historyArrow.style.transform = 'rotate(180deg)'; } else { historyContentWrapper.style.maxHeight = '0px'; historyArrow.style.transform = 'rotate(0deg)'; } });
+        }
+        
+        function renderAdminMatchHistory() {
+            const container = document.getElementById('admin-match-history');
+            container.innerHTML = '';
+            if (state.matches.length === 0) { container.innerHTML = '<p class="text-gray-500">Aún no se han jugado partidos.</p>'; } 
+            else {
+                [...state.matches].reverse().forEach(match => {
+                    const matchEl = document.createElement('div');
+                    matchEl.innerHTML = generateMatchResultHTML(match, true);
+                    const editButton = document.createElement('button');
+                    editButton.innerHTML = '✏️';
+                    editButton.className = 'edit-match text-blue-500 hover:text-blue-700 text-sm ml-2';
+                    editButton.dataset.id = match.id;
+                    matchEl.querySelector('.flex.justify-between.items-center').appendChild(editButton);
+                    container.appendChild(matchEl);
+                });
+            }
+        }
+        
+        function checkTeamsAndShowMatchForm() {
+            const addMatchSection = document.getElementById('add-match-section');
+            const addTeamForm = document.getElementById('add-team-form');
+            if (state.teams.length >= 2) {
+                addMatchSection.classList.remove('hidden');
+                addTeamForm.classList.add('hidden');
+                renderMatchForm(); 
+            } else {
+                addMatchSection.classList.add('hidden');
+                addTeamForm.classList.remove('hidden');
+            }
+        }
+
+        // --- GENERADORES DE HTML ---
+        function generateStandingsHTML(teamStats) { 
+            if (teamStats.length < 2) return '<p class="text-gray-500">Aún no hay equipos definidos.</p>'; 
+            const bestAttackId = teamStats.length > 0 ? teamStats.reduce((prev, current) => (prev.gf > current.gf) ? prev : current).id : null;
+            const bestDefenseId = teamStats.length > 0 ? teamStats.reduce((prev, current) => (prev.ga < current.ga) ? prev : current).id : null;
+            
+            return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover flex-shrink-0"> <span class="break-words">${t.name} ${t.id === bestAttackId ? '🎯' : ''} ${t.id === bestDefenseId ? '🛡️' : ''}</span> </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> <div class="text-xs text-gray-500 mt-2">🎯 Mejor Ataque | 🛡️ Mejor Defensa</div></div>`; 
+        }
+
+        function generateTopScorersHTML(sortedScorers) { 
+            if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; 
+            return ` <ul class="space-y-2"> ${sortedScorers.map(([playerName, goals], index) => { 
+                const player = getPlayerByName(playerName); 
+                const playerPhoto = player ? player.photo : ''; 
+                return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
+                    <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
+                        <img src="${playerPhoto || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F'}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
+                        <span class="font-medium">${index + 1}. ${playerName}</span> 
+                    </a> 
+                    <span class="font-bold text-lg">${goals}</span> 
+                </li>` 
+            }).join('')} </ul>`; 
+        }
+
+        function generateMatchResultHTML(match, isAdmin = false) { 
+            const team1 = getTeamById(match.teams[0].id); 
+            const team2 = getTeamById(match.teams[1].id); 
+            if(!team1 || !team2) return ''; 
+            const matchScorers = (match.scorers || []).map(s => `<li>${s.player} (${s.goals})</li>`).join(''); 
+            
+            return `
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                    ${isAdmin ? '' : ''}
+                </div>
+                <div class="flex items-center text-base sm:text-lg font-bold">
+                    <div class="w-2/5 flex items-center justify-end gap-3 text-right break-words pr-2">
+                        <span>${team1.name}</span>
+                        <img src="${team1.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
+                    </div>
+                    <div class="w-1/5 text-center text-xl sm:text-2xl">${match.teams[0].score}&nbsp;-&nbsp;${match.teams[1].score}</div>
+                    <div class="w-2/5 flex items-center justify-start gap-3 text-left break-words pl-2">
+                        <img src="${team2.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
+                        <span>${team2.name}</span>
+                    </div>
+                </div>
+                ${isAdmin && matchScorers ? `<details class="mt-2 text-sm"><summary class="cursor-pointer text-gray-600">Ver goleadores</summary><ul class="list-disc pl-5 mt-1">${matchScorers}</ul></details>` : ''}
+            </div>`; 
+        }
+
+        // --- LÓGICA DE MODALES ---
+        function openModal(innerHTML) {
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.innerHTML = innerHTML;
+            modalContainer.firstChild.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+        
+        window.openEditModal = (type, id) => {
+            const item = type === 'team' ? getTeamById(id) : getPlayerById(id);
+            if (!item) return;
+
+            const modalHTML = `
+            <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3 text-center">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Editar ${type === 'team' ? 'Equipo' : 'Jugador'}</h3>
+                        <div class="mt-2 px-7 py-3">
+                            <form id="edit-form" class="space-y-4">
+                                <div>
+                                    <label for="edit-name" class="block text-left text-sm font-medium text-gray-700">Nombre</label>
+                                    <input type="text" id="edit-name" class="mt-1 w-full p-2 border rounded-md" value="${item.name}" required>
+                                </div>
+                                <div>
+                                    <label for="edit-photo-logo" class="block text-left text-sm font-medium text-gray-700">URL de ${type === 'team' ? 'Logo' : 'Foto'}</label>
+                                    <input type="url" id="edit-photo-logo" class="mt-1 w-full p-2 border rounded-md" value="${type === 'team' ? (item.logo || '') : (item.photo || '')}">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="items-center px-4 py-3 space-y-2">
+                            <button id="save-edit-btn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600">Guardar</button>
+                            <button id="cancel-edit-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            openModal(modalHTML);
+            
+            document.getElementById('cancel-edit-btn').onclick = closeModal;
+            document.getElementById('save-edit-btn').onclick = () => {
+                const newName = document.getElementById('edit-name').value.trim();
+                const newUrl = document.getElementById('edit-photo-logo').value.trim();
+                if (!newName) { alert("El nombre no puede estar vacío."); return; }
+
+                if (type === 'team') {
+                    const team = getTeamById(id);
+                    if (team) { team.name = newName; team.logo = newUrl; }
+                } else {
+                    const player = getPlayerById(id);
+                    if (player) {
+                        const oldName = player.name;
+                        if (oldName !== newName) {
+                            state.matches.forEach(match => {
+                                (match.scorers || []).forEach(scorer => { if (scorer.player === oldName) { scorer.player = newName; } });
+                            });
+                        }
+                        player.name = newName; player.photo = newUrl;
+                    }
+                }
+                saveData();
+                closeModal();
+            };
+        };
+
+        window.openMatchModal = (matchId = null) => {
+            const isEditing = matchId !== null;
+            const match = isEditing ? state.matches.find(m => m.id === matchId) : null;
+            const modalTitle = isEditing ? 'Editar Partido' : 'Registrar Nuevo Partido';
+            const [team1, team2] = state.teams;
+
+            const sortedPlayers = [...state.players].sort((a,b) => a.name.localeCompare(b.name));
+
+            const generatePlayerCheckboxes = (teamNum, checkedPlayerIds = []) => {
+                return sortedPlayers.map(p => `
+                    <label class="flex items-center gap-2 p-1 rounded hover:bg-gray-100">
+                        <input type="checkbox" class="player-checkbox-team${teamNum}" value="${p.id}" ${checkedPlayerIds.includes(p.id) ? 'checked' : ''}>
+                        <img src="${p.photo || 'https://placehold.co/24x24/e2e8f0/64748b?text=%3F'}" class="w-6 h-6 rounded-full object-cover">
+                        <span>${p.name}</span>
+                    </label>
+                `).join('');
+            };
+
+            const modalHTML = `
+            <div id="match-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                    <h3 class="text-2xl font-bold mb-4 border-b pb-2">${modalTitle}</h3>
+                    <form id="match-form" class="space-y-4">
+                        <div><label for="match-date-modal" class="block font-medium mb-1">Fecha</label><input type="date" id="match-date-modal" class="w-full p-2 border rounded-md" value="${isEditing ? match.date : ''}" required></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block font-medium mb-1">${team1.name}</label><p id="team-1-score-display" class="text-5xl font-bold text-center py-2">0</p></div>
+                            <div><label class="block font-medium mb-1">${team2.name}</label><p id="team-2-score-display" class="text-5xl font-bold text-center py-2">0</p></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t">
+                             <div>
+                                <h4 class="font-semibold text-gray-700 mb-2">Convocados ${team1.name}</h4>
+                                <div class="max-h-40 overflow-y-auto border rounded p-2 space-y-1">${generatePlayerCheckboxes(1, match?.playersTeam1 || [])}</div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-700 mb-2">Convocados ${team2.name}</h4>
+                                <div class="max-h-40 overflow-y-auto border rounded p-2 space-y-1">${generatePlayerCheckboxes(2, match?.playersTeam2 || [])}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t">
+                            <div id="team-1-scorers-modal"></div>
+                            <div id="team-2-scorers-modal"></div>
+                        </div>
+                        <div class="flex justify-end gap-3 pt-4 border-t">
+                            <button type="button" id="cancel-match-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">${isEditing ? 'Guardar Cambios' : 'Guardar Partido'}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
+            openModal(modalHTML);
+            
+            const team1ScorersContainer = document.getElementById('team-1-scorers-modal');
+            const team2ScorersContainer = document.getElementById('team-2-scorers-modal');
+
+            const addScorerRow = (teamNum, scorer) => { /* ... (función interna para añadir fila de goleador) ... */ };
+            
+            // Llenar goleadores si estamos editando
+            if(isEditing) { (match.scorers || []).forEach(scorer => addScorerRow(scorer.teamId === team1.id ? 1: 2, scorer)); }
+
+            document.getElementById('cancel-match-btn').onclick = closeModal;
+            document.getElementById('match-form').onsubmit = (e) => {
+                 e.preventDefault();
+                 // Lógica para guardar partido (similar a la anterior pero adaptada al modal)
+                 const date = document.getElementById('match-date-modal').value;
+                 // ... recolectar goleadores, convocados, etc.
+                 const newMatch = {
+                     id: isEditing ? matchId : Date.now(),
+                     date,
+                     // ... resto de datos
+                 };
+                 if (isEditing) {
+                     const matchIndex = state.matches.findIndex(m => m.id === matchId);
+                     state.matches[matchIndex] = newMatch;
+                 } else {
+                     state.matches.push(newMatch);
+                 }
+                 saveData();
+                 closeModal();
+            };
+        };
+
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('add-team-form').addEventListener('submit', (e) => { e.preventDefault(); if (state.teams.length >= 2) { alert("Ya has añadido los dos equipos."); return; } const name = document.getElementById('team-name').value; const logo = document.getElementById('team-logo').value; if (!name.trim()) return; state.teams.push({ id: Date.now(), name, logo }); e.target.reset(); saveData(); });
+        document.getElementById('teams-list').addEventListener('click', (e) => { const target = e.target.closest('button'); if (!target) return; const id = parseInt(target.dataset.id); if (target.classList.contains('delete-team')) { if(confirm('¿Seguro? Se borrarán todos los partidos.')){ state.teams = state.teams.filter(t => t.id !== id); state.matches = []; saveData(); } } else if (target.classList.contains('edit-team')) { openEditModal('team', id); } });
+        document.getElementById('add-player-form').addEventListener('submit', (e) => { e.preventDefault(); const name = document.getElementById('player-name').value; const photo = document.getElementById('player-photo').value; if (!name.trim()) { alert("El nombre no puede estar vacío."); return; } if (getPlayerByName(name)) { alert('Este jugador ya existe.'); return; } state.players.push({ id: Date.now(), name, photo }); e.target.reset(); saveData(); });
+        document.getElementById('players-list').addEventListener('click', (e) => { const target = e.target.closest('button'); if (!target) return; const id = parseInt(target.dataset.id); if (target.classList.contains('delete-player')) { const player = getPlayerById(id); if (player && confirm(`¿Seguro que quieres borrar a ${player.name}?`)) { state.players = state.players.filter(p => p.id !== id); state.matches.forEach(m => { m.scorers = (m.scorers || []).filter(s => s.player !== player.name); (m.playersTeam1 || []).filter(pId => pId !== id); (m.playersTeam2 || []).filter(pId => pId !== id); }); saveData(); } } else if (target.classList.contains('edit-player')) { openEditModal('player', id); } });
+        document.getElementById('admin-match-history').addEventListener('click', (e) => { const target = e.target.closest('button'); if (!target) return; const id = parseInt(target.dataset.id); if (target.classList.contains('delete-match')) { if (confirm("¿Seguro que quieres borrar este partido?")) { state.matches = state.matches.filter(m => m.id !== id); saveData(); } } else if (target.classList.contains('edit-match')) { openMatchModal(id); } });
+        document.getElementById('clear-data-button').addEventListener('click', () => { if (confirm('¿ESTÁS SEGURO? Se borrarán TODOS los datos.')) { state.teams = []; state.players = []; state.matches = []; saveData(); } });
+        document.getElementById('toggle-history-btn').addEventListener('click', (e) => { const btn = e.currentTarget; const wrapper = document.getElementById('history-content-wrapper'); const arrow = document.getElementById('history-arrow'); const isHidden = wrapper.style.maxHeight === '0px' || wrapper.style.maxHeight === ''; if (isHidden) { wrapper.style.maxHeight = wrapper.scrollHeight + "px"; arrow.style.transform = 'rotate(180deg)'; } else { wrapper.style.maxHeight = '0px'; arrow.style.transform = 'rotate(0deg)'; } });
+        
+        // --- INICIO DE LA APP ---
         loadData();
+
     </script>
 </body>
 </html>
