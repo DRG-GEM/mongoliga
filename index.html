@@ -86,7 +86,7 @@
                         <form id="add-match-form" class="space-y-4">
                             <div> <label for="match-date" class="block font-medium mb-1">Fecha del Partido</label> <input type="date" id="match-date" class="w-full p-2 border rounded-md" required> </div>
                             <div class="grid grid-cols-2 gap-4"> <div id="team-1-selector"></div> <div id="team-2-selector"></div> </div>
-                            <div id="scorers-section" class="space-y-4 pt-4 border-t"> <h3 class="font-bold text-lg">Goleadores</h3> <div id="team-1-scorers"></div> <div id="team-2-scorers"></div> </div>
+                            <div id="scorers-section" class="space-y-4 pt-4 border-t"> <h3 class="font-bold text-lg">Goleadores</h3> <div class="grid grid-cols-2 gap-4"><div id="team-1-scorers"></div> <div id="team-2-scorers"></div></div> </div>
                             <div> <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors">Guardar Partido</button> </div>
                         </form>
                     </div>
@@ -216,9 +216,53 @@
         function renderTeams() { teamsList.innerHTML = ''; if (state.teams.length === 0) { teamsList.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } else { state.teams.forEach((team) => { const teamEl = document.createElement('div'); teamEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg'; teamEl.innerHTML = `<div class="flex items-center gap-3"><img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" alt="Logo" class="w-10 h-10 rounded-full object-cover"><span class="font-semibold">${team.name}</span></div><button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button>`; teamsList.appendChild(teamEl); }); } }
         function renderPlayers() { playersList.innerHTML = ''; if (state.players.length === 0) { playersList.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } else { state.players.sort().forEach((player) => { const playerEl = document.createElement('div'); playerEl.className = 'flex justify-between items-center'; playerEl.innerHTML = `<span>${player}</span><button data-name="${player}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>`; playersList.appendChild(playerEl); }); } }
         function checkTeamsAndShowMatchForm() { if (state.teams.length >= 2) { addMatchSection.classList.remove('hidden'); document.getElementById('teams-section').querySelector('form').classList.add('hidden'); } else { addMatchSection.classList.add('hidden'); document.getElementById('teams-section').querySelector('form').classList.remove('hidden'); } }
-        function renderMatchFormSelectors() { if (state.teams.length < 2) return; team1Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[0].name}</label><input type="number" id="team-1-score" class="w-full p-2 border rounded-md" min="0" placeholder="Goles" required>`; team2Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[1].name}</label><input type="number" id="team-2-score" class="w-full p-2 border rounded-md" min="0" placeholder="Goles" required>`; renderScorersInputs(state.teams[0].id, 1); renderScorersInputs(state.teams[1].id, 2); }
-        function renderScorersInputs(teamId, teamNumber) { const container = teamNumber === 1 ? team1Scorers : team2Scorers; container.innerHTML = `<h4 class="font-semibold text-gray-700">${state.teams[teamNumber-1].name}</h4>`; const playerOptions = state.players.map(p => `<option value="${p}">${p}</option>`).join(''); for (let i = 0; i < 20; i++) { const scorerEl = document.createElement('div'); scorerEl.className = `scorer-input-group scorer-team-${teamNumber} flex gap-2 mb-2 hidden`; scorerEl.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md" data-team-id="${teamId}"><option value="">Selecciona jugador...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded-md" min="1" value="1">`; container.appendChild(scorerEl); } const scoreInput = document.getElementById(`team-${teamNumber}-score`); if(scoreInput) { scoreInput.removeEventListener('input', updateScorerFields); scoreInput.addEventListener('input', updateScorerFields); } }
-        function updateScorerFields(e) { const teamNumber = e.target.id.includes('1') ? 1 : 2; const container = teamNumber === 1 ? team1Scorers : team2Scorers; const goalCount = parseInt(e.target.value) || 0; container.querySelectorAll(`.scorer-input-group`).forEach((group, index) => { if (index < goalCount) group.classList.remove('hidden'); else { group.classList.add('hidden'); group.querySelector('select').value = ''; group.querySelector('input').value = '1'; } }); }
+        
+        function renderMatchFormSelectors() {
+            if (state.teams.length < 2) return;
+            team1Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[0].name}</label><p id="team-1-score-display" class="text-5xl font-bold text-center py-2">0</p>`;
+            team2Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[1].name}</label><p id="team-2-score-display" class="text-5xl font-bold text-center py-2">0</p>`;
+            team1Scorers.innerHTML = `<h4 class="font-semibold text-gray-700">Goleadores ${state.teams[0].name}</h4><button type="button" id="add-scorer-team1" class="mt-2 w-full text-sm bg-gray-200 text-gray-700 py-1 rounded-md hover:bg-gray-300 transition-colors">+ Añadir Goleador</button>`;
+            team2Scorers.innerHTML = `<h4 class="font-semibold text-gray-700">Goleadores ${state.teams[1].name}</h4><button type="button" id="add-scorer-team2" class="mt-2 w-full text-sm bg-gray-200 text-gray-700 py-1 rounded-md hover:bg-gray-300 transition-colors">+ Añadir Goleador</button>`;
+            document.getElementById('add-scorer-team1').addEventListener('click', () => addScorerRow(1));
+            document.getElementById('add-scorer-team2').addEventListener('click', () => addScorerRow(2));
+        }
+
+        function addScorerRow(teamNumber) {
+            const container = teamNumber === 1 ? team1Scorers : team2Scorers;
+            const teamId = state.teams[teamNumber - 1].id;
+            const playerOptions = state.players.sort().map(p => `<option value="${p}">${p}</option>`).join('');
+            const scorerEl = document.createElement('div');
+            scorerEl.className = 'scorer-input-group flex gap-2 mb-2 items-center';
+            scorerEl.innerHTML = `
+                <select class="player-select w-2/3 p-2 border rounded-md" data-team-id="${teamId}">
+                    <option value="">Selecciona jugador...</option>
+                    ${playerOptions}
+                </select>
+                <input type="number" class="goals-input w-1/3 p-2 border rounded-md" min="1" value="1">
+                <button type="button" class="remove-scorer text-red-500 hover:text-red-700 p-2">✖</button>
+            `;
+            container.insertBefore(scorerEl, container.lastElementChild);
+            scorerEl.querySelector('.goals-input').addEventListener('input', updateScore);
+            scorerEl.querySelector('.remove-scorer').addEventListener('click', () => {
+                scorerEl.remove();
+                updateScore();
+            });
+            updateScore();
+        }
+
+        function updateScore() {
+            let team1Score = 0;
+            document.querySelectorAll('#team-1-scorers .scorer-input-group').forEach(group => {
+                team1Score += parseInt(group.querySelector('.goals-input').value) || 0;
+            });
+            document.getElementById('team-1-score-display').textContent = team1Score;
+            let team2Score = 0;
+            document.querySelectorAll('#team-2-scorers .scorer-input-group').forEach(group => {
+                team2Score += parseInt(group.querySelector('.goals-input').value) || 0;
+            });
+            document.getElementById('team-2-score-display').textContent = team2Score;
+        }
+
         function renderAdminMatchHistory() { adminMatchHistory.innerHTML = ''; if (state.matches.length === 0) { adminMatchHistory.innerHTML = '<p class="text-gray-500">Aún no se han jugado partidos.</p>'; } else { [...state.matches].reverse().forEach(match => { adminMatchHistory.innerHTML += generateMatchResultHTML(match, true); }); } }
         function renderLatestResults() { latestResults.innerHTML = ''; if (state.matches.length === 0) { latestResults.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } const last5matches = [...state.matches].reverse().slice(0, 5); last5matches.forEach(match => { latestResults.innerHTML += generateMatchResultHTML(match, false); }); }
         function renderStats() { const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); const scorerStats = {}; state.matches.forEach(match => { const team1Stat = teamStats.find(t => t.id === match.teams[0].id); const team2Stat = teamStats.find(t => t.id === match.teams[1].id); if (!team1Stat || !team2Stat) return; team1Stat.played++; team2Stat.played++; team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } match.scorers.forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); }); const sortedScorers = Object.entries(scorerStats).sort(([, a], [, b]) => b - a).slice(0, 10); publicStandings.innerHTML = generateStandingsHTML(teamStats); publicTopScorers.innerHTML = generateTopScorersHTML(sortedScorers); }
@@ -277,7 +321,38 @@
             }
         });
 
-        addMatchForm.addEventListener('submit', e => { e.preventDefault(); const date = document.getElementById('match-date').value; const team1Score = parseInt(document.getElementById('team-1-score').value); const team2Score = parseInt(document.getElementById('team-2-score').value); const scorers = []; const scorerGroups = document.querySelectorAll('.scorer-input-group:not(.hidden)'); let formIsValid = true; scorerGroups.forEach(group => { const player = group.querySelector('.player-select').value; const goals = parseInt(group.querySelector('.goals-input').value); const teamId = parseInt(group.querySelector('.player-select').dataset.teamId); if (player && goals > 0) { scorers.push({ player, goals, teamId }); } else if (player === '') { formIsValid = false; } }); if (!formIsValid) { alert('Debes seleccionar un jugador para cada gol registrado.'); return; } if (isNaN(team1Score) || isNaN(team2Score)) { alert('Debes introducir un resultado para ambos equipos.'); return; } if (team1Score + team2Score !== scorers.reduce((acc, s) => acc + s.goals, 0)) { alert('La suma de goles de los jugadores no coincide con el resultado final del partido.'); return; } const match = { id: Date.now(), date, teams: [{ id: state.teams[0].id, score: team1Score }, { id: state.teams[1].id, score: team2Score }], scorers }; state.matches.push(match); saveData(); addMatchForm.reset(); document.querySelectorAll('.scorer-input-group').forEach(group => group.classList.add('hidden')); });
+        addMatchForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const date = document.getElementById('match-date').value;
+            if (!date) {
+                alert('Debes seleccionar una fecha para el partido.');
+                return;
+            }
+            const team1Score = parseInt(document.getElementById('team-1-score-display').textContent);
+            const team2Score = parseInt(document.getElementById('team-2-score-display').textContent);
+            const scorers = [];
+            let formIsValid = true;
+            document.querySelectorAll('.scorer-input-group').forEach(group => {
+                const player = group.querySelector('.player-select').value;
+                const goals = parseInt(group.querySelector('.goals-input').value) || 0;
+                const teamId = parseInt(group.querySelector('.player-select').dataset.teamId);
+                if (player && goals > 0) {
+                    scorers.push({ player, goals, teamId });
+                } else if (!player && goals > 0) {
+                    formIsValid = false;
+                }
+            });
+            if (!formIsValid) {
+                alert('Hay goles asignados a un jugador no seleccionado.');
+                return;
+            }
+            const match = { id: Date.now(), date, teams: [{ id: state.teams[0].id, score: team1Score }, { id: state.teams[1].id, score: team2Score }], scorers };
+            state.matches.push(match);
+            saveData();
+            addMatchForm.reset();
+            renderMatchFormSelectors();
+        });
+        
         adminMatchHistory.addEventListener('click', (e) => { if (e.target.classList.contains('delete-match')) { if (confirm("¿Seguro que quieres borrar este partido?")) { const id = parseInt(e.target.dataset.id); state.matches = state.matches.filter(m => m.id !== id); saveData(); } } });
         clearDataButton.addEventListener('click', () => { if (confirm('¿ESTÁS SEGURO? Se borrarán TODOS los datos de forma PERMANENTE.')) { state.teams = []; state.players = []; state.matches = []; saveData(); } });
 
