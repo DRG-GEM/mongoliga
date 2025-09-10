@@ -99,15 +99,11 @@
         </div>
     </div>
     
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // ***************************************************************
-        // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE (LA MISMA DE ANTES)
-        // ***************************************************************
         const firebaseConfig = {
   apiKey: "AIzaSyCh6Eupmi9fpmUqa2K7994jjKUqXdweAUY",
   authDomain: "mongoliga-39101.firebaseapp.com",
@@ -117,26 +113,18 @@
   appId: "1:90986575463:web:14f261d8339972966686c2"
 };
 
-        // ***************************************************************
-        // IMPORTANTE: PEGA AQUÍ TU UID DE GOOGLE COMO ADMINISTRADOR
-        // (Ver instrucciones más abajo para encontrarlo)
-        // ***************************************************************
         const ADMIN_UID = "96GY6i4IDXPQj2aA68Rxc7zoZj02";
-        // ***************************************************************
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const leagueDocRef = doc(db, "leagueData", "main");
         
-        // --- State ---
         const state = { teams: [], players: [], matches: [], dataLoaded: false };
 
-        // --- DOM Elements ---
         const loadingSpinner = document.getElementById('loading');
         const authSection = document.getElementById('auth-section');
         const adminView = document.getElementById('admin-view');
-        // ... (el resto de los getElementById son iguales)
         const addTeamForm = document.getElementById('add-team-form');
         const teamsList = document.getElementById('teams-list');
         const addPlayerForm = document.getElementById('add-player-form');
@@ -154,29 +142,21 @@
         const publicTopScorers = document.getElementById('public-top-scorers');
         const publicMatchHistory = document.getElementById('public-match-history');
 
-        // --- Authentication ---
         const provider = new GoogleAuthProvider();
 
         async function signInWithGoogle() {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("Error during sign-in:", error);
-            }
+            try { await signInWithPopup(auth, provider); } 
+            catch (error) { console.error("Error during sign-in:", error); }
         }
 
         async function logOut() {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                console.error("Error during sign-out:", error);
-            }
+            try { await signOut(auth); } 
+            catch (error) { console.error("Error during sign-out:", error); }
         }
 
         onAuthStateChanged(auth, user => {
             authSection.innerHTML = '';
             if (user) {
-                // User is signed in
                 if (user.uid === ADMIN_UID) {
                     adminView.classList.remove('hidden');
                 }
@@ -186,7 +166,6 @@
                 logoutButton.onclick = logOut;
                 authSection.appendChild(logoutButton);
             } else {
-                // User is signed out
                 adminView.classList.add('hidden');
                 const loginButton = document.createElement('button');
                 loginButton.textContent = 'Acceder como Admin';
@@ -196,7 +175,6 @@
             }
         });
 
-        // --- Data Persistence (Firebase) ---
         async function saveData() {
             if (auth.currentUser?.uid !== ADMIN_UID) {
                 alert("No tienes permiso para realizar esta acción.");
@@ -231,32 +209,80 @@
             });
         }
         
-        // --- Rendering Functions (son las mismas que antes, no necesitan cambios) ---
         function render() { if (!state.dataLoaded) return; renderTeams(); renderPlayers(); checkTeamsAndShowMatchForm(); renderMatchFormSelectors(); renderAdminMatchHistory(); renderLatestResults(); renderStats(); renderPublicMatchHistory(); }
-        function generateStandingsHTML(teamStats) { if (teamStats.length < 2) return '<p class="text-gray-500">Se necesitan 2 equipos.</p>'; return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover"> ${t.name} </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> </div>`; }
+        function generateStandingsHTML(teamStats) { if (teamStats.length < 2) return '<p class="text-gray-500">Aún no hay equipos definidos.</p>'; return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover"> ${t.name} </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> </div>`; }
         function generateTopScorersHTML(sortedScorers) { if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; return ` <ul class="space-y-2"> ${sortedScorers.map(([player, goals], index) => ` <li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-yellow-50' : ''))}"> <span class="font-medium">${index + 1}. ${player}</span> <span class="font-bold text-lg">${goals}</span> </li> `).join('')} </ul>`; }
         function generateMatchResultHTML(match, isAdmin = false) { const team1 = state.teams.find(t => t.id === match.teams[0].id); const team2 = state.teams.find(t => t.id === match.teams[1].id); if(!team1 || !team2) return ''; const matchScorers = match.scorers.map(s => { const team = state.teams.find(t => t.id === s.teamId); return `<li>${s.player} (${s.goals}) - ${team?.name || 'N/A'}</li>`; }).join(''); return ` <div class="bg-gray-50 p-4 rounded-lg"> <div class="flex justify-between items-center mb-2"> <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span> ${isAdmin ? `<button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>` : ''} </div> <div class="flex justify-between items-center text-xl font-bold"> <span class="flex-1 text-left truncate">${team1.name}</span> <span class="mx-4">${match.teams[0].score} - ${match.teams[1].score}</span> <span class="flex-1 text-right truncate">${team2.name}</span> </div> ${isAdmin ? `<details class="mt-2 text-sm"> <summary class="cursor-pointer text-gray-600">Ver goleadores</summary> <ul class="list-disc pl-5 mt-1">${matchScorers || '<li>Sin goles registrados</li>'}</ul> </details>` : ''} </div> `; }
         function renderTeams() { teamsList.innerHTML = ''; if (state.teams.length === 0) { teamsList.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } else { state.teams.forEach((team) => { const teamEl = document.createElement('div'); teamEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg'; teamEl.innerHTML = `<div class="flex items-center gap-3"><img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" alt="Logo" class="w-10 h-10 rounded-full object-cover"><span class="font-semibold">${team.name}</span></div><button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button>`; teamsList.appendChild(teamEl); }); } }
         function renderPlayers() { playersList.innerHTML = ''; if (state.players.length === 0) { playersList.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } else { state.players.sort().forEach((player) => { const playerEl = document.createElement('div'); playerEl.className = 'flex justify-between items-center'; playerEl.innerHTML = `<span>${player}</span><button data-name="${player}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button>`; playersList.appendChild(playerEl); }); } }
         function checkTeamsAndShowMatchForm() { if (state.teams.length >= 2) { addMatchSection.classList.remove('hidden'); document.getElementById('teams-section').querySelector('form').classList.add('hidden'); } else { addMatchSection.classList.add('hidden'); document.getElementById('teams-section').querySelector('form').classList.remove('hidden'); } }
         function renderMatchFormSelectors() { if (state.teams.length < 2) return; team1Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[0].name}</label><input type="number" id="team-1-score" class="w-full p-2 border rounded-md" min="0" placeholder="Goles" required>`; team2Selector.innerHTML = `<label class="block font-medium mb-1">${state.teams[1].name}</label><input type="number" id="team-2-score" class="w-full p-2 border rounded-md" min="0" placeholder="Goles" required>`; renderScorersInputs(state.teams[0].id, 1); renderScorersInputs(state.teams[1].id, 2); }
-        function renderScorersInputs(teamId, teamNumber) { const container = teamNumber === 1 ? team1Scorers : team2Scorers; container.innerHTML = `<h4 class="font-semibold text-gray-700">${state.teams[teamNumber-1].name}</h4>`; const playerOptions = state.players.map(p => `<option value="${p}">${p}</option>`).join(''); for (let i = 0; i < 20; i++) { const scorerEl = document.createElement('div'); scorerEl.className = `scorer-input-group scorer-team-${teamNumber} flex gap-2 mb-2 hidden`; scorerEl.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md" data-team-id="${teamId}"><option value="">Selecciona jugador...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded-md" min="1" value="1">`; container.appendChild(scorerEl); } const scoreInput = document.getElementById(`team-${teamNumber}-score`); scoreInput?.addEventListener('input', (e) => { const goalCount = parseInt(e.target.value) || 0; container.querySelectorAll(`.scorer-input-group`).forEach((group, index) => { if (index < goalCount) group.classList.remove('hidden'); else { group.classList.add('hidden'); group.querySelector('select').value = ''; group.querySelector('input').value = '1'; } }); }); }
+        function renderScorersInputs(teamId, teamNumber) { const container = teamNumber === 1 ? team1Scorers : team2Scorers; container.innerHTML = `<h4 class="font-semibold text-gray-700">${state.teams[teamNumber-1].name}</h4>`; const playerOptions = state.players.map(p => `<option value="${p}">${p}</option>`).join(''); for (let i = 0; i < 20; i++) { const scorerEl = document.createElement('div'); scorerEl.className = `scorer-input-group scorer-team-${teamNumber} flex gap-2 mb-2 hidden`; scorerEl.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md" data-team-id="${teamId}"><option value="">Selecciona jugador...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded-md" min="1" value="1">`; container.appendChild(scorerEl); } const scoreInput = document.getElementById(`team-${teamNumber}-score`); if(scoreInput) { scoreInput.removeEventListener('input', updateScorerFields); scoreInput.addEventListener('input', updateScorerFields); } }
+        function updateScorerFields(e) { const teamNumber = e.target.id.includes('1') ? 1 : 2; const container = teamNumber === 1 ? team1Scorers : team2Scorers; const goalCount = parseInt(e.target.value) || 0; container.querySelectorAll(`.scorer-input-group`).forEach((group, index) => { if (index < goalCount) group.classList.remove('hidden'); else { group.classList.add('hidden'); group.querySelector('select').value = ''; group.querySelector('input').value = '1'; } }); }
         function renderAdminMatchHistory() { adminMatchHistory.innerHTML = ''; if (state.matches.length === 0) { adminMatchHistory.innerHTML = '<p class="text-gray-500">Aún no se han jugado partidos.</p>'; } else { [...state.matches].reverse().forEach(match => { adminMatchHistory.innerHTML += generateMatchResultHTML(match, true); }); } }
         function renderLatestResults() { latestResults.innerHTML = ''; if (state.matches.length === 0) { latestResults.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } const last5matches = [...state.matches].reverse().slice(0, 5); last5matches.forEach(match => { latestResults.innerHTML += generateMatchResultHTML(match, false); }); }
         function renderStats() { const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); const scorerStats = {}; state.matches.forEach(match => { const team1Stat = teamStats.find(t => t.id === match.teams[0].id); const team2Stat = teamStats.find(t => t.id === match.teams[1].id); if (!team1Stat || !team2Stat) return; team1Stat.played++; team2Stat.played++; team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } match.scorers.forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); }); const sortedScorers = Object.entries(scorerStats).sort(([, a], [, b]) => b - a).slice(0, 10); publicStandings.innerHTML = generateStandingsHTML(teamStats); publicTopScorers.innerHTML = generateTopScorersHTML(sortedScorers); }
         function renderPublicMatchHistory() { publicMatchHistory.innerHTML = ''; if (state.matches.length === 0) { publicMatchHistory.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>'; return; } [...state.matches].reverse().forEach(match => { publicMatchHistory.innerHTML += generateMatchResultHTML(match, false); }); }
         
         // --- Event Listeners (Admin only) ---
-        addTeamForm.addEventListener('submit', (e) => { e.preventDefault(); saveData(); });
-        teamsList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-team')) { if(confirm('¿Seguro?')){ state.teams = []; state.matches = []; saveData(); } } });
-        addPlayerForm.addEventListener('submit', (e) => { e.preventDefault(); const name = document.getElementById('player-name').value; if (state.players.includes(name)) { alert('Este jugador ya existe.'); return; } state.players.push(name); addPlayerForm.reset(); saveData(); });
-        playersList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-player')) { const name = e.target.dataset.name; state.players = state.players.filter(p => p !== name); saveData(); } });
-        addMatchForm.addEventListener('submit', e => { e.preventDefault(); const date = document.getElementById('match-date').value; const team1Score = parseInt(document.getElementById('team-1-score').value); const team2Score = parseInt(document.getElementById('team-2-score').value); const scorers = []; const scorerGroups = document.querySelectorAll('.scorer-input-group:not(.hidden)'); let formIsValid = true; scorerGroups.forEach(group => { const player = group.querySelector('.player-select').value; const goals = parseInt(group.querySelector('.goals-input').value); const teamId = parseInt(group.querySelector('.player-select').dataset.teamId); if (player && goals > 0) { scorers.push({ player, goals, teamId }); } else if (player === '') { formIsValid = false; } }); if (!formIsValid) { alert('Debes seleccionar un jugador para cada gol registrado.'); return; } if (team1Score + team2Score !== scorers.reduce((acc, s) => acc + s.goals, 0)) { alert('La suma de goles de los jugadores no coincide con el resultado final del partido.'); return; } const match = { id: Date.now(), date, teams: [{ id: state.teams[0].id, score: team1Score }, { id: state.teams[1].id, score: team2Score }], scorers }; state.matches.push(match); saveData(); addMatchForm.reset(); document.querySelectorAll('.scorer-input-group').forEach(group => group.classList.add('hidden')); });
-        adminMatchHistory.addEventListener('click', (e) => { if (e.target.classList.contains('delete-match')) { const id = parseInt(e.target.dataset.id); state.matches = state.matches.filter(m => m.id !== id); saveData(); } });
+        addTeamForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (state.teams.length >= 2) {
+                alert("Ya has añadido los dos equipos de la liga.");
+                return;
+            }
+            const name = document.getElementById('team-name').value;
+            const logo = document.getElementById('team-logo').value;
+            if (!name.trim()) {
+                alert("El nombre del equipo no puede estar vacío.");
+                return;
+            }
+            state.teams.push({ id: Date.now(), name, logo });
+            addTeamForm.reset();
+            saveData();
+        });
+
+        teamsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-team')) {
+                if(confirm('Esto borrará TODOS los equipos y partidos. ¿Quieres empezar una nueva temporada?')){
+                    state.teams = [];
+                    state.matches = [];
+                    saveData();
+                }
+            }
+        });
+
+        addPlayerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('player-name');
+            const name = nameInput.value;
+            if (!name.trim()) {
+                alert("El nombre del jugador no puede estar vacío.");
+                return;
+            }
+            if (state.players.find(p => p.toLowerCase() === name.toLowerCase())) {
+                alert('Este jugador ya existe.');
+                return;
+            }
+            state.players.push(name);
+            nameInput.value = '';
+            saveData();
+        });
+
+        playersList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-player')) {
+                const name = e.target.dataset.name;
+                state.players = state.players.filter(p => p !== name);
+                saveData();
+            }
+        });
+
+        addMatchForm.addEventListener('submit', e => { e.preventDefault(); const date = document.getElementById('match-date').value; const team1Score = parseInt(document.getElementById('team-1-score').value); const team2Score = parseInt(document.getElementById('team-2-score').value); const scorers = []; const scorerGroups = document.querySelectorAll('.scorer-input-group:not(.hidden)'); let formIsValid = true; scorerGroups.forEach(group => { const player = group.querySelector('.player-select').value; const goals = parseInt(group.querySelector('.goals-input').value); const teamId = parseInt(group.querySelector('.player-select').dataset.teamId); if (player && goals > 0) { scorers.push({ player, goals, teamId }); } else if (player === '') { formIsValid = false; } }); if (!formIsValid) { alert('Debes seleccionar un jugador para cada gol registrado.'); return; } if (isNaN(team1Score) || isNaN(team2Score)) { alert('Debes introducir un resultado para ambos equipos.'); return; } if (team1Score + team2Score !== scorers.reduce((acc, s) => acc + s.goals, 0)) { alert('La suma de goles de los jugadores no coincide con el resultado final del partido.'); return; } const match = { id: Date.now(), date, teams: [{ id: state.teams[0].id, score: team1Score }, { id: state.teams[1].id, score: team2Score }], scorers }; state.matches.push(match); saveData(); addMatchForm.reset(); document.querySelectorAll('.scorer-input-group').forEach(group => group.classList.add('hidden')); });
+        adminMatchHistory.addEventListener('click', (e) => { if (e.target.classList.contains('delete-match')) { if (confirm("¿Seguro que quieres borrar este partido?")) { const id = parseInt(e.target.dataset.id); state.matches = state.matches.filter(m => m.id !== id); saveData(); } } });
         clearDataButton.addEventListener('click', () => { if (confirm('¿ESTÁS SEGURO? Se borrarán TODOS los datos de forma PERMANENTE.')) { state.teams = []; state.players = []; state.matches = []; saveData(); } });
 
-        // --- Initial Load ---
         loadData();
     </script>
 </body>
 </html>
+
