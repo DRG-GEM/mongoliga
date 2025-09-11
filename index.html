@@ -156,8 +156,7 @@
         // IMPORTANTE: Pega aquí tu UID de Google como administrador
          const ADMIN_UIDS = ["96GY6i4IDXPQj2aA68Rxc7zoZj02", "kZPPWJhrjaRd63ET2gPcnj4ZqIr2"];
         
-
-        const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const leagueDocRef = doc(db, "leagueData", "main");
@@ -182,7 +181,7 @@
                 renderPlayerStatsPage(playerName);
                 playerStatsView.classList.remove('hidden');
             } else if (hash === '#admin') {
-                if (auth.currentUser?.uid === ADMIN_UID) {
+                if (auth.currentUser && ADMIN_UIDS.includes(auth.currentUser.uid)) {
                     adminView.classList.remove('hidden');
                 }
             } else {
@@ -220,7 +219,7 @@
         
         // --- DATOS (FIREBASE) ---
         async function saveData() {
-            if (auth.currentUser?.uid !== ADMIN_UID) { alert("No tienes permiso para realizar esta acción."); return; }
+            if (!auth.currentUser || !ADMIN_UIDS.includes(auth.currentUser.uid)) { alert("No tienes permiso para realizar esta acción."); return; }
             try {
                 const { dataLoaded, ...dataToSave } = state;
                 await setDoc(leagueDocRef, dataToSave);
