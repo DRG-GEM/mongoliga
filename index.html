@@ -1,703 +1,400 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mongoliga</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .history-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
-        }
-        .banner {
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Mongolia.svg');
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-        .banner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-        }
-        .banner-title {
-            font-family: 'Black Ops One', cursive;
-            text-shadow: 3px 3px 8px rgba(0,0,0,0.8);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestor de Comedor Escolar</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Inter', sans-serif; }
+.admin-only { display: none; }
+.user-only { display: none; }
+.student-item { transition: all 0.2s ease-in-out; }
+.student-item.pending { background-color: #374151; }
+.student-item.present { background-color: #166534; transform: scale(1.02); }
+.student-item.absent { background-color: #991b1b; text-decoration: line-through; opacity: 0.6; }
+#role-selection-screen { backdrop-filter: blur(10px); }
+#history-modal, #generic-modal { transition: opacity 0.3s ease; }
+</style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+<body class="bg-gray-900 text-white antialiased">
 
-    <div id="loading" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="loader"></div>
-    </div>
-    
-    <div id="auth-container" class="min-h-[60px] flex justify-end p-4"></div>
+<!-- App principal -->
+<div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl opacity-0 transition-opacity duration-500">
+  <header class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-cyan-400">Gestor de Comedor</h1>
+    <p id="role-display" class="text-gray-400 mt-2 font-semibold">Cargando...</p>
+  </header>
+  
+  <div id="admin-login-view" class="hidden text-center">
+      <h2 class="text-2xl font-semibold mb-6">Acceso de Administrador</h2>
+      <button id="login-admin-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-lg text-lg flex items-center justify-center gap-3 mx-auto">
+        <svg class="w-6 h-6" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.19,4.73C14.03,4.73 15.69,5.36 16.95,6.57L19.05,4.54C17.22,2.77 15,2 12.19,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.16,22 12.19,22C17.6,22 21.54,18.22 21.54,12.33C21.54,11.76 21.48,11.43 21.35,11.1V11.1Z"></path></svg>
+        <span>Iniciar Sesión con Google</span>
+      </button>
+  </div>
 
-    <main class="container mx-auto p-4 md:p-8 max-w-7xl flex-grow">
-        <header class="banner rounded-xl shadow-lg overflow-hidden mb-8 h-48 flex items-center justify-center text-white text-center p-4 relative">
-            <div class="banner-overlay"></div>
-            <div class="relative z-10">
-                <h1 class="banner-title text-5xl md:text-7xl">MONGOLIGA</h1>
-                <p class="text-lg md:text-xl mt-2 font-light">Temporada 2025/26</p>
-            </div>
-        </header>
-
-        <!-- VISTA PRINCIPAL -->
-        <div id="main-view">
-             <div class="space-y-8">
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <h2 class="text-2xl font-bold mb-4 border-b pb-2">Últimos 5 Partidos</h2>
-                    <div id="latest-results" class="space-y-4"></div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-white p-6 rounded-xl shadow-md">
-                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Clasificación</h2>
-                        <div id="public-standings"></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md">
-                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Pichichi</h2>
-                        <div id="public-top-scorers"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-8">
-                <button id="toggle-history-btn" class="w-full bg-white text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-md hover:bg-gray-50 transition-colors flex justify-between items-center">
-                    <span>Historial Completo de Partidos</span>
-                    <svg id="history-arrow" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-                <div id="history-content-wrapper" class="history-content mt-2">
-                    <div id="public-match-history" class="bg-white p-6 rounded-xl shadow-md space-y-4 max-h-[40rem] overflow-y-auto">
-                    </div>
-                </div>
-            </div>
+  <div id="main-content" class="hidden">
+      <!-- Selección de turno -->
+      <div id="shift-selection" class="text-center">
+        <h2 class="text-2xl font-semibold mb-4">Elige un turno de comedor</h2>
+        <div id="shift-buttons" class="flex flex-wrap justify-center gap-4">
+          <button class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-6 rounded-lg text-lg" data-shift="Primer Turno (Infantil)">Primer Turno (Infantil)</button>
+          <button class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-6 rounded-lg text-lg" data-shift="Segundo Turno (Primaria)">Segundo Turno (Primaria)</button>
         </div>
-        
-        <!-- VISTA DE ESTADÍSTICAS DE JUGADOR -->
-        <div id="player-stats-view" class="hidden">
-            <!-- Contenido se genera dinámicamente -->
+        <div class="mt-8 admin-only">
+          <h3 class="text-xl font-semibold mb-4">Gestión de Datos</h3>
+          <button id="import-csv-btn-initial" class="bg-green-600 hover:bg-green-500 font-bold py-3 px-6 rounded-lg">📤 Importar Alumnos (CSV)</button>
+          <button id="wipe-db" class="bg-red-600 hover:bg-red-500 font-bold py-3 px-6 rounded-lg">🗑️ Borrar todos los alumnos</button>
+          <p id="import-status-initial" class="text-green-400 mt-2 h-6"></p>
         </div>
+      </div>
 
-        <!-- VISTA DE ADMINISTRACIÓN -->
-        <div id="admin-view" class="hidden mt-12 pt-8 border-t-4 border-indigo-500">
-             <h2 class="text-center text-3xl font-bold mb-8">Panel de Administración</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="md:col-span-1 space-y-8">
-                    <div id="teams-section" class="bg-white p-6 rounded-xl shadow-md">
-                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Equipos</h2>
-                        <div id="teams-list" class="space-y-4"></div>
-                        <form id="add-team-form" class="mt-4 space-y-3">
-                            <input type="text" id="team-name" placeholder="Nombre del Equipo" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500" required>
-                            <input type="url" id="team-logo" placeholder="URL del logo (opcional)" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500">
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">Añadir Equipo</button>
-                        </form>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md">
-                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Jugadores</h2>
-                        <div id="players-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></div>
-                        <form id="add-player-form" class="mt-4 space-y-3">
-                            <input type="text" id="player-name" placeholder="Nombre del Jugador" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500" required>
-                            <input type="url" id="player-photo" placeholder="URL de la foto (opcional)" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500">
-                            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors">Añadir Jugador</button>
-                        </form>
-                    </div>
-                     <div class="bg-white p-6 rounded-xl shadow-md">
-                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Zona de Peligro</h2>
-                        <button id="clear-data-button" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors">Resetear Todos los Datos</button>
-                     </div>
-                </div>
-                <div class="md:col-span-2 space-y-8">
-                    <div id="add-match-section" class="bg-white p-6 rounded-xl shadow-md hidden">
-                        <button id="open-match-modal-btn" class="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 transition-colors text-lg font-semibold">
-                            + Registrar Nuevo Partido
-                        </button>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md">
-                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Historial de Partidos (Admin)</h2>
-                        <div id="admin-match-history" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
-                    </div>
-                </div>
-            </div>
+      <!-- Dashboard -->
+      <main id="dashboard" class="hidden">
+        <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+          <button id="back-to-shifts" class="bg-gray-600 hover:bg-gray-500 font-bold py-2 px-4 rounded-lg">&larr; Cambiar Turno</button>
+          <div class="flex flex-wrap gap-4">
+            <button id="import-csv-btn-dashboard" class="bg-green-600 hover:bg-green-500 font-bold py-2 px-4 rounded-lg admin-only">📤 Importar Alumnos (CSV)</button>
+            <button id="export-csv-btn-dashboard" class="bg-blue-600 hover:bg-blue-500 font-bold py-2 px-4 rounded-lg admin-only">💾 Exportar CSV del Día</button>
+            <button id="finalize-shift-btn" class="bg-orange-600 hover:bg-orange-500 font-bold py-2 px-4 rounded-lg">🏁 Finalizar Turno</button>
+          </div>
         </div>
-    </main>
+        <p id="import-status-dashboard" class="text-center text-green-400 mb-4 h-6"></p>
 
-    <footer class="text-center py-4 text-gray-500 text-sm">
-        <p>&copy; Made by Dragonpat 2025</p>
-    </footer>
+        <section id="summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-gray-800 p-4 rounded-lg text-center"><h3 class="text-lg font-semibold text-gray-400">Comensales del Día</h3><p id="summary-diners" class="text-3xl font-bold">0</p></div>
+          <div class="bg-red-800 bg-opacity-50 p-4 rounded-lg text-center"><h3 class="text-lg font-semibold text-red-300">Ausentes</h3><p id="summary-absent" class="text-3xl font-bold">0</p></div>
+          <div class="bg-blue-800 bg-opacity-50 p-4 rounded-lg text-center"><h3 class="text-lg font-semibold text-blue-300">Pendientes</h3><p id="summary-pending" class="text-3xl font-bold">0</p></div>
+          <div class="bg-green-800 bg-opacity-50 p-4 rounded-lg text-center"><h3 class="text-lg font-semibold text-green-300">PRESENTES</h3><p id="summary-present" class="text-3xl font-bold">0</p></div>
+        </section>
 
-    <!-- MODALES -->
-    <div id="modal-container"></div>
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        <section id="student-lists">
+          <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+      </main>
+  </div>
+</div>
 
-        const firebaseConfig = {
-  apiKey: "AIzaSyCh6Eupmi9fpmUqa2K7994jjKUqXdweAUY",
-  authDomain: "mongoliga-39101.firebaseapp.com",
-  projectId: "mongoliga-39101",
-  storageBucket: "mongoliga-39101.firebasestorage.app",
-  messagingSenderId: "90986575463",
-  appId: "1:90986575463:web:14f261d8339972966686c2"
+<input type="file" id="csv-file-input" class="hidden" accept=".csv">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<!-- PapaParse -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // --- Configuración Firebase ---
+  const firebaseConfig = {
+  apiKey: "AIzaSyAeI9G1_2-E8Kghc-88bkrXa_VDJXeDyHo",
+  authDomain: "comedorvp.firebaseapp.com",
+  projectId: "comedorvp",
+  storageBucket: "comedorvp.firebasestorage.app",
+  messagingSenderId: "821870274048",
+  appId: "1:821870274048:web:62b85d28ceace395245ae5"
 };
-       
-        // IMPORTANTE: Pega aquí tu UID de Google como administrador
-         const ADMIN_UIDS = ["96GY6i4IDXPQj2aA68Rxc7zoZj02", "kZPPWJhrjaRd63ET2gPcnj4ZqIr2"];
-        
-   const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const leagueDocRef = doc(db, "leagueData", "main");
-        
-        const state = { teams: [], players: [], matches: [], dataLoaded: false };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+  let userRole = null;
+  const appState = { currentShift: null, students: [], attendance: {} };
 
-        // --- NAVEGACIÓN Y VISTAS ---
-        function navigate() {
-            const hash = window.location.hash;
-            const mainView = document.getElementById('main-view');
-            const playerStatsView = document.getElementById('player-stats-view');
-            const adminView = document.getElementById('admin-view');
+  const dom = {
+    app: document.getElementById('app'),
+    roleDisplay: document.getElementById('role-display'),
+    shiftSelection: document.getElementById('shift-selection'),
+    dashboard: document.getElementById('dashboard'),
+    coursesContainer: document.getElementById('courses-container'),
+    csvFileInput: document.getElementById('csv-file-input'),
+    importStatusInitial: document.getElementById('import-status-initial'),
+    importStatusDashboard: document.getElementById('import-status-dashboard'),
+    wipeDbBtn: document.getElementById('wipe-db'),
+    finalizeShiftBtn: document.getElementById('finalize-shift-btn'),
+    adminLoginView: document.getElementById('admin-login-view'),
+    mainContent: document.getElementById('main-content')
+  };
 
-            mainView.classList.add('hidden');
-            playerStatsView.classList.add('hidden');
-            adminView.classList.add('hidden'); 
+  // --- UI ---
+  function setUIVisibility() {
+    dom.app.classList.remove('opacity-0');
+    
+    // Ocultar todas las vistas principales primero
+    dom.adminLoginView.classList.add('hidden');
+    dom.mainContent.classList.add('hidden');
 
-            renderAuthUI(auth.currentUser);
+    if (userRole === 'admin') {
+        dom.mainContent.classList.remove('hidden');
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+        document.querySelectorAll('.user-only').forEach(el => el.style.display = 'none');
+        const user = auth.currentUser;
+        dom.roleDisplay.textContent = user ? `Admin: ${user.displayName}` : 'Admin';
+    } else if (userRole === 'user') {
+        dom.mainContent.classList.remove('hidden');
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.user-only').forEach(el => el.style.display = 'block');
+        dom.roleDisplay.textContent = 'Modo: Profesor / Cuidador';
+    } else if (userRole === 'login') {
+        dom.adminLoginView.classList.remove('hidden');
+        dom.roleDisplay.textContent = 'Acceso de Administrador';
+    }
+  }
 
-            if (hash.startsWith('#/player/')) {
-                const playerName = decodeURIComponent(hash.substring(9));
-                renderPlayerStatsPage(playerName);
-                playerStatsView.classList.remove('hidden');
-            } else if (hash === '#admin') {
-                if (auth.currentUser && ADMIN_UIDS.includes(auth.currentUser.uid)) {
-                    adminView.classList.remove('hidden');
-                }
-            } else {
-                mainView.classList.remove('hidden');
-            }
-        }
-        
-        // --- AUTENTICACIÓN ---
-        const provider = new GoogleAuthProvider();
-        async function signInWithGoogle() { try { await signInWithPopup(auth, provider); } catch (error) { console.error("Error signing in:", error); }}
-        async function logOut() { try { await signOut(auth); window.location.hash = ''; } catch (error) { console.error("Error signing out:", error); }}
+  // --- Firestore helpers ---
+  async function fetchStudents(shift) {
+    let query = db.collection("students");
+    if (shift) {
+        query = query.where("shift", "==", shift);
+    }
+    const snapshot = await query.get();
+    return snapshot.docs.map(doc => ({id:doc.id, ...doc.data()}));
+  }
+  async function addStudentBatch(students) {
+    const batch = db.batch();
+    const collection = db.collection("students");
+    students.forEach(s => {
+      if(s.name && s.course && s.shift){
+        batch.set(collection.doc(), {name:s.name.trim(), course:s.course.trim(), shift:s.shift.trim()});
+      }
+    });
+    await batch.commit();
+  }
+  async function deleteAllStudents() {
+    const snapshot = await db.collection("students").get();
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  }
+  async function logAttendance(studentId, dateStr, state) {
+    if (studentId.startsWith('sporadic_')) return;
+    const docRef = db.collection("attendance").doc(`${studentId}_${dateStr}`);
+    await docRef.set({studentId, date: dateStr, state});
+  }
+   async function logBatchAttendance(studentsToUpdate, dateStr, state) {
+    const validStudents = studentsToUpdate.filter(id => !id.startsWith('sporadic_'));
+    if (validStudents.length === 0) return;
+    const batch = db.batch();
+    const collection = db.collection("attendance");
+    validStudents.forEach(studentId => {
+      const docRef = collection.doc(`${studentId}_${dateStr}`);
+      batch.set(docRef, { studentId, date: dateStr, state });
+    });
+    await batch.commit();
+  }
+  async function fetchAttendanceByDate(dateStr) {
+    const snapshot = await db.collection("attendance").where("date","==",dateStr).get();
+    const data = {};
+    snapshot.docs.forEach(doc=>data[doc.data().studentId]=doc.data().state);
+    return data;
+  }
 
-        function renderAuthUI(user) {
-            const authContainer = document.getElementById('auth-container');
-            authContainer.innerHTML = '';
-            const isAdminRoute = window.location.hash === '#admin';
-            if (user) { 
-                if (isAdminRoute) {
-                    const logoutButton = document.createElement('button');
-                    logoutButton.textContent = `Salir (${user.displayName.split(' ')[0]})`;
-                    logoutButton.className = "bg-red-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition-colors";
-                    logoutButton.onclick = logOut;
-                    authContainer.appendChild(logoutButton);
-                }
-            } else { 
-                if (isAdminRoute) {
-                    const loginButton = document.createElement('button');
-                    loginButton.textContent = 'Acceder como Admin';
-                    loginButton.className = "bg-white text-gray-700 py-2 px-4 rounded-lg shadow-md hover:bg-gray-200 transition-colors";
-                    loginButton.onclick = signInWithGoogle;
-                    authContainer.appendChild(loginButton);
-                }
-            }
-        }
-        
-        // --- DATOS (FIREBASE) ---
-        async function saveData() {
-            if (!auth.currentUser || !ADMIN_UIDS.includes(auth.currentUser.uid)) { alert("No tienes permiso para realizar esta acción."); return; }
-            try {
-                const { dataLoaded, ...dataToSave } = state;
-                await setDoc(leagueDocRef, dataToSave);
-            } catch (error) { console.error("Error saving data:", error); alert("Hubo un error al guardar los datos."); }
-        }
+  // --- Render ---
+  function updateSummary() {
+    const vals = Object.values(appState.attendance);
+    dom.summary = {
+      diners: document.getElementById('summary-diners'),
+      absent: document.getElementById('summary-absent'),
+      pending: document.getElementById('summary-pending'),
+      present: document.getElementById('summary-present')
+    };
+    dom.summary.diners.textContent = vals.length;
+    dom.summary.absent.textContent = vals.filter(s=>'absent'===s).length;
+    dom.summary.present.textContent = vals.filter(s=>'present'===s).length;
+    dom.summary.pending.textContent = vals.filter(s=>'pending'===s).length;
+  }
 
-        function loadData() {
-            onSnapshot(leagueDocRef, (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    state.teams = data.teams || [];
-                    state.players = data.players || [];
-                    state.matches = data.matches || [];
-                }
-                if (!state.dataLoaded) { state.dataLoaded = true; document.getElementById('loading').style.display = 'none'; }
-                renderAll();
-                navigate(); 
-            }, (error) => {
-                console.error("Error loading data:", error);
-                alert("No se pudieron cargar los datos.");
-                document.getElementById('loading').style.display = 'none';
-            });
-        }
-        
-        // --- LÓGICA DE RENDERIZADO PRINCIPAL ---
-        function renderAll() {
-            if (!state.dataLoaded) return;
-            renderAdminTeams();
-            renderAdminPlayers();
-            renderAdminMatchHistory();
-            checkTeamsAndShowMatchForm();
-            renderLatestResults();
-            renderStats();
-            renderPublicMatchHistory();
-        }
+  function createStudentElement(s){
+    return `<div id="${s.id}" class="student-item p-3 rounded-md cursor-pointer flex justify-between items-center mt-2 ${appState.attendance[s.id]||'pending'}" data-student-id="${s.id}" data-student-name="${s.name}"><span>${s.name}</span><button class="mark-absent-btn bg-red-500 hover:bg-red-400 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center">&times;</button></div>`;
+  }
 
-        function getTeamById(id) { return state.teams.find(t => t.id === id); }
-        function getPlayerById(id) { return state.players.find(p => p.id === id); }
-        function getPlayerByName(name) { return state.players.find(p => p.name === name); }
-        
-        // --- RENDERIZADO DE COMPONENTES ---
-        function renderLatestResults() {
-            const container = document.getElementById('latest-results');
-            container.innerHTML = '';
-            if (state.matches.length === 0) {
-                container.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>';
-                return;
-            }
-            [...state.matches].reverse().slice(0, 5).forEach(match => {
-                container.innerHTML += generateMatchResultHTML(match);
-            });
-        }
+  async function renderCourses(shift) {
+    appState.currentShift = shift;
+    dom.shiftSelection.classList.add('hidden');
+    dom.dashboard.classList.remove('hidden');
+    dom.coursesContainer.innerHTML = '<p class="text-center text-lg">Cargando alumnos...</p>';
+    appState.students = await fetchStudents(shift);
+    const today = new Date().toISOString().slice(0,10);
+    const attendance = await fetchAttendanceByDate(today);
+    appState.attendance = {};
+    appState.students.forEach(s=>appState.attendance[s.id]=attendance[s.id]||'pending');
+    dom.coursesContainer.innerHTML = '';
+    const courses = [...new Set(appState.students.map(s=>s.course))].sort();
+    if(courses.length===0){
+      dom.coursesContainer.innerHTML='<p class="text-center text-lg text-gray-400">No hay alumnos en este turno.</p>';
+    }else{
+      courses.forEach(course=>{
+        const card = document.createElement('div');
+        card.className='bg-gray-800 rounded-lg p-4 shadow-lg flex flex-col';
+        const list = appState.students.filter(s=>s.course===course).map(createStudentElement).join('');
+        const sporadicBtn = userRole === 'user' ? `<button class="add-sporadic-btn mt-4 bg-purple-600 hover:bg-purple-500 font-bold py-2 px-4 rounded-lg" data-course="${course}">+ Añadir Esporádico</button>` : '';
+        card.innerHTML=`<div class="flex-grow"><h3 class="text-xl font-bold text-cyan-300 mb-3">${course}</h3><div class="space-y-2" data-course-list="${course}">${list}</div></div>${sporadicBtn}`;
+        dom.coursesContainer.appendChild(card);
+      });
+    }
+    updateSummary();
+  }
 
-        function renderPublicMatchHistory() {
-            const container = document.getElementById('public-match-history');
-            container.innerHTML = '';
-            if (state.matches.length === 0) {
-                container.innerHTML = '<p class="text-gray-500">Aún no hay partidos registrados.</p>';
-                return;
-            }
-            [...state.matches].reverse().forEach(match => {
-                container.innerHTML += generateMatchResultHTML(match);
-            });
-        }
+  // --- CSV Import ---
+  function handleCsvImport(file){
+    if(!file) return;
+    [dom.importStatusInitial,dom.importStatusDashboard].forEach(el=>el.textContent='Procesando archivo...');
+    Papa.parse(file,{header:true,skipEmptyLines:true,complete: async (results)=>{
+      const headers = results.meta.fields.map(h => h.toLowerCase().trim());
+      if(!headers.includes('nombre') || !headers.includes('curso') || !headers.includes('turno')){
+        [dom.importStatusInitial,dom.importStatusDashboard].forEach(el=>el.textContent='Error: CSV debe tener columnas "nombre", "curso", y "turno"');
+        return;
+      }
+      await deleteAllStudents();
+      const studentsToImport = results.data.map(r => ({
+          name: r.nombre ? r.nombre.trim() : '',
+          course: r.curso ? r.curso.trim() : '',
+          shift: r.turno ? r.turno.trim() : ''
+      }));
+      await addStudentBatch(studentsToImport);
+      [dom.importStatusInitial,dom.importStatusDashboard].forEach(el=>el.textContent='Importación completa ✅');
+      if (appState.currentShift) {
+          renderCourses(appState.currentShift);
+      }
+    },error: err=>{[dom.importStatusInitial,dom.importStatusDashboard].forEach(el=>el.textContent='Error: '+err.message);}});
+  }
 
-        function renderStats() {
-            const teamStats = state.teams.map(team => ({ id: team.id, name: team.name, logo: team.logo, played: 0, wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, pts: 0 })); 
-            const scorerStats = {}; 
-            state.matches.forEach(match => { 
-                const team1Stat = teamStats.find(t => t.id === match.teams[0].id); 
-                const team2Stat = teamStats.find(t => t.id === match.teams[1].id); 
-                if (!team1Stat || !team2Stat) return; 
-                team1Stat.played++; team2Stat.played++; 
-                team1Stat.gf += match.teams[0].score; team1Stat.ga += match.teams[1].score; 
-                team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; 
-                if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } 
-                else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } 
-                else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } 
-                (match.scorers || []).forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); 
-            }); 
-            
-            const sortedScorers = Object.entries(scorerStats).sort((a, b) => { if (b[1] !== a[1]) { return b[1] - a[1]; } return a[0].localeCompare(b[0]); }).slice(0, 10); 
-            
-            document.getElementById('public-standings').innerHTML = generateStandingsHTML(teamStats); 
-            document.getElementById('public-top-scorers').innerHTML = generateTopScorersHTML(sortedScorers);
-        }
-
-        function renderPlayerStatsPage(playerName) {
-            const player = getPlayerByName(playerName);
-            const container = document.getElementById('player-stats-view');
-            if (!player) {
-                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-md"><p>Jugador no encontrado.</p><a href="#" class="text-blue-500 mt-4 inline-block">&larr; Volver</a></div>`;
-                return;
-            }
-
-            let played = 0, wins = 0, goals = 0;
-            const playerMatches = [];
-
-            state.matches.forEach(match => {
-                const team1 = getTeamById(match.teams[0].id);
-                const team2 = getTeamById(match.teams[1].id);
-                if (!team1 || !team2) return;
-
-                const playerTeamId = (match.playersTeam1 || []).includes(player.id) ? team1.id : (match.playersTeam2 || []).includes(player.id) ? team2.id : null;
-
-                if (playerTeamId) {
-                    played++;
-                    playerMatches.push(match);
-                    const playerTeamScore = playerTeamId === team1.id ? match.teams[0].score : match.teams[1].score;
-                    const opponentScore = playerTeamId === team1.id ? match.teams[1].score : match.teams[0].score;
-                    if (playerTeamScore > opponentScore) wins++;
-                }
-                (match.scorers || []).forEach(scorer => {
-                    if (scorer.player === playerName) goals += scorer.goals;
-                });
-            });
-            const winRate = played > 0 ? ((wins / played) * 100).toFixed(0) : 0;
-            const goalsPerMatch = played > 0 ? (goals / played).toFixed(2) : 0;
-
-            container.innerHTML = `
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <a href="#" class="text-blue-500 mb-6 inline-block">&larr; Volver a la liga</a>
-                    <div class="flex flex-col sm:flex-row items-center gap-6 border-b pb-6 mb-6">
-                        <img src="${player.photo || 'https://placehold.co/96x96/e2e8f0/64748b?text=%3F'}" class="w-24 h-24 rounded-full object-cover bg-gray-300">
-                        <div><h2 class="text-4xl font-bold">${player.name}</h2></div>
-                    </div>
-                    <h3 class="text-xl font-bold mb-4">Estadísticas de Temporada</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${played}</p><p class="text-sm text-gray-600">Partidos</p></div>
-                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${goals}</p><p class="text-sm text-gray-600">Goles</p></div>
-                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${goalsPerMatch}</p><p class="text-sm text-gray-600">Goles / Partido</p></div>
-                        <div class="bg-gray-50 p-4 rounded-lg"><p class="text-2xl font-bold">${winRate}%</p><p class="text-sm text-gray-600">% Victorias</p></div>
-                    </div>
-                    <h3 class="text-xl font-bold mt-8 mb-4">Historial de Partidos Jugados</h3>
-                    <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
-                        ${playerMatches.length > 0 ? [...playerMatches].reverse().map(m => generateMatchResultHTML(m)).join('') : '<p class="text-gray-500">Sin partidos registrados.</p>'}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderAdminTeams() {
-            const container = document.getElementById('teams-list');
-            container.innerHTML = '';
-            if (state.teams.length === 0) { container.innerHTML = '<p class="text-gray-500">Añade dos equipos para empezar.</p>'; } 
-            else { state.teams.forEach(team => {
-                container.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div class="flex items-center gap-3"><img src="${team.logo || 'https://placehold.co/40x40/e2e8f0/64748b?text=L'}" class="w-10 h-10 rounded-full object-cover"><span class="font-semibold">${team.name}</span></div>
-                    <div class="flex gap-2"><button data-id="${team.id}" class="edit-team text-blue-500 hover:text-blue-700">✏️</button><button data-id="${team.id}" class="delete-team text-red-500 hover:text-red-700">✖</button></div>
-                </div>`;
-            }); }
-        }
-
-        function renderAdminPlayers() {
-            const container = document.getElementById('players-list');
-            container.innerHTML = '';
-            if (state.players.length === 0) { container.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } 
-            else {
-                state.players.sort((a, b) => a.name.localeCompare(b.name)).forEach(player => {
-                    container.innerHTML += `
-                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                        <a href="#/player/${encodeURIComponent(player.name)}" class="flex items-center gap-2 hover:underline">
-                            <img src="${player.photo || 'https://placehold.co/24x24/e2e8f0/64748b?text=%3F'}" class="w-6 h-6 rounded-full object-cover bg-gray-300"><span>${player.name}</span>
-                        </a>
-                        <div class="flex gap-2"><button data-id="${player.id}" class="edit-player text-blue-500 hover:text-blue-700">✏️</button><button data-id="${player.id}" class="delete-player text-red-500 hover:text-red-700 text-sm">✖</button></div>
-                    </div>`;
-                });
-            }
-        }
-        
-        function renderAdminMatchHistory() {
-            const container = document.getElementById('admin-match-history');
-            container.innerHTML = '';
-            if (state.matches.length === 0) { container.innerHTML = '<p class="text-gray-500">Aún no se han jugado partidos.</p>'; } 
-            else {
-                [...state.matches].reverse().forEach(match => {
-                    const matchEl = document.createElement('div');
-                    matchEl.innerHTML = generateMatchResultHTML(match);
-                    const controls = document.createElement('div');
-                    controls.className = "flex gap-2 absolute top-4 right-4";
-                    controls.innerHTML = `<button data-id="${match.id}" class="edit-match text-blue-500 hover:text-blue-700 text-sm">✏️</button><button data-id="${match.id}" class="delete-match text-red-500 hover:text-red-700 text-sm">✖</button>`;
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'relative';
-                    wrapper.appendChild(matchEl);
-                    wrapper.appendChild(controls);
-                    container.appendChild(wrapper);
-                });
-            }
-        }
-        
-        function checkTeamsAndShowMatchForm() {
-            const addMatchSection = document.getElementById('add-match-section');
-            const addTeamForm = document.getElementById('add-team-form');
-            if (state.teams.length >= 2) {
-                addMatchSection.classList.remove('hidden');
-                addTeamForm.classList.add('hidden');
-            } else {
-                addMatchSection.classList.add('hidden');
-                addTeamForm.classList.remove('hidden');
-            }
-        }
-
-        // --- GENERADORES DE HTML ---
-        function generateStandingsHTML(teamStats) { 
-            if (teamStats.length < 2) return '<p class="text-gray-500">Aún no hay equipos definidos.</p>'; 
-            const bestAttackId = teamStats.length > 0 && state.matches.length > 0 ? teamStats.reduce((prev, current) => (prev.gf > current.gf) ? prev : current).id : null;
-            const bestDefenseId = teamStats.length > 0 && state.matches.length > 0 ? teamStats.reduce((prev, current) => (prev.ga < current.ga) ? prev : current).id : null;
-            
-            return ` <div class="overflow-x-auto"> <table class="w-full text-left text-sm"> <thead> <tr class="bg-gray-50"> <th class="p-2">Equipo</th> <th class="p-2 text-center">PJ</th> <th class="p-2 text-center">V</th> <th class="p-2 text-center">E</th> <th class="p-2 text-center">D</th> <th class="p-2 text-center">Pts</th> </tr> </thead> <tbody> ${teamStats.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga)).map(t => ` <tr class="border-b"> <td class="p-2 flex items-center gap-2 font-semibold"> <img src="${t.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" alt="Logo" class="w-6 h-6 rounded-full object-cover flex-shrink-0"> <span class="break-words">${t.name} ${t.id === bestAttackId ? '🎯' : ''} ${t.id === bestDefenseId ? '🛡️' : ''}</span> </td> <td class="p-2 text-center">${t.played}</td> <td class="p-2 text-center">${t.wins}</td> <td class="p-2 text-center">${t.draws}</td> <td class="p-2 text-center">${t.losses}</td> <td class="p-2 text-center font-bold">${t.pts}</td> </tr> `).join('')} </tbody> </table> <div class="text-xs text-gray-500 mt-2">🎯 Mejor Ataque | 🛡️ Mejor Defensa</div></div>`; 
-        }
-
-        function generateTopScorersHTML(sortedScorers) { 
-            if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; 
-            return ` <ul class="space-y-2"> ${sortedScorers.map(([playerName, goals], index) => { 
-                const player = getPlayerByName(playerName); 
-                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-clipart/20250515/original/pngtree-cristiano-ronaldo-golden-boot-award-achievement-png-image_20984864.png" alt="Bota de Oro" class="w-8 h-8 ml-1">' : '';
-                return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
-                    <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
-                        <img src="${(player && player.photo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F'}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
-                        <span class="font-medium">${index + 1}. ${playerName}</span> ${goldenBoot}
-                    </a> 
-                    <span class="font-bold text-lg">${goals}</span> 
-                </li>` 
-            }).join('')} </ul>`; 
-        }
-
-        function generateMatchResultHTML(match) { 
-            const team1 = getTeamById(match.teams[0].id); 
-            const team2 = getTeamById(match.teams[1].id); 
-            if(!team1 || !team2) return ''; 
-            const matchScorers = (match.scorers || []).map(s => {
-                const team = getTeamById(s.teamId);
-                return `<li class="flex items-center gap-2"><img src="${team.logo || 'https://placehold.co/16x16/e2e8f0/64748b?text=L'}" class="w-4 h-4 rounded-full">${s.player} (${s.goals})</li>`;
-            }).join(''); 
-            
-            return `
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-sm text-gray-600">${new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                </div>
-                <div class="flex items-center text-base sm:text-lg font-bold">
-                    <div class="w-2/5 flex items-center justify-end gap-3 text-right break-words pr-2">
-                        <span>${team1.name}</span>
-                        <img src="${team1.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
-                    </div>
-                    <div class="w-1/5 text-center text-xl sm:text-2xl">${match.teams[0].score}&nbsp;-&nbsp;${match.teams[1].score}</div>
-                    <div class="w-2/5 flex items-center justify-start gap-3 text-left break-words pl-2">
-                        <img src="${team2.logo || 'https://placehold.co/24x24/e2e8f0/64748b?text=L'}" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
-                        <span>${team2.name}</span>
-                    </div>
-                </div>
-                ${matchScorers ? `<details class="mt-2 text-sm"><summary class="cursor-pointer text-gray-600">Ver goleadores</summary><ul class="list-disc pl-5 mt-1 space-y-1">${matchScorers}</ul></details>` : ''}
-            </div>`; 
-        }
-
-        // --- LÓGICA DE MODALES ---
-        function openModal(innerHTML) {
-            document.getElementById('modal-container').innerHTML = innerHTML;
-        }
-
-        function closeModal() {
-            document.getElementById('modal-container').innerHTML = '';
-        }
-        
-        function openEditModal(type, id) {
-            const item = type === 'team' ? getTeamById(id) : getPlayerById(id);
-            if (!item) return;
-
-            const modalHTML = `
-            <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                    <div class="mt-3 text-center">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Editar ${type === 'team' ? 'Equipo' : 'Jugador'}</h3>
-                        <form id="edit-form" data-type="${type}" data-id="${id}" class="space-y-4 mt-2 px-7 py-3 text-left">
-                            <div>
-                                <label class="block text-sm font-medium">Nombre</label>
-                                <input type="text" id="edit-name" class="mt-1 w-full p-2 border rounded-md" value="${item.name}" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium">URL de ${type === 'team' ? 'Logo' : 'Foto'}</label>
-                                <input type="url" id="edit-photo-logo" class="mt-1 w-full p-2 border rounded-md" value="${type === 'team' ? (item.logo || '') : (item.photo || '')}">
-                            </div>
-                        </form>
-                        <div class="items-center px-4 py-3 space-y-2">
-                            <button id="save-edit-btn" class="px-4 py-2 bg-green-500 text-white rounded-md w-full">Guardar</button>
-                            <button id="cancel-edit-btn" class="px-4 py-2 bg-gray-200 rounded-md w-full">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-            openModal(modalHTML);
+  // --- CSV Export ---
+  async function exportFullDayCsv(dateStr){
+    const allStudents = await fetchStudents(null); // Fetch all students, no shift filter
+    const attendance = await fetchAttendanceByDate(dateStr);
+    const rows = allStudents.map(s=>{
+      const state = attendance[s.id]||'pending';
+      return {Fecha:dateStr, Turno:s.shift, Nombre:s.name, Curso:s.course, Estado:state};
+    });
+    rows.sort((a,b) => a.Turno.localeCompare(b.Turno) || a.Curso.localeCompare(b.Curso) || a.Nombre.localeCompare(b.Nombre));
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([`\uFEFF${csv}`],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=`asistencia_completa_${dateStr}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+  
+  // --- Add Sporadic ---
+  function addSporadicStudent(course) {
+    const name = prompt(`Nombre del alumno esporádico para ${course}:`);
+    if (name && name.trim()) {
+        const student = {
+            id: `sporadic_${Date.now()}`,
+            name: `${name.trim()} (Esporádico)`,
+            course: course
         };
+        appState.students.push(student);
+        appState.attendance[student.id] = 'pending';
+        const listContainer = document.querySelector(`[data-course-list="${course}"]`);
+        if (listContainer) {
+            listContainer.insertAdjacentHTML('beforeend', createStudentElement(student));
+        }
+        updateSummary();
+    }
+  }
+  
+  // --- Finalize Shift ---
+  async function finalizeShift() {
+      if (!confirm("¿Seguro que quieres finalizar el turno? Todos los alumnos pendientes pasarán a estar ausentes.")) {
+          return;
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      const studentsToMarkAbsent = [];
+      for (const studentId in appState.attendance) {
+          if (appState.attendance[studentId] === 'pending') {
+              studentsToMarkAbsent.push(studentId);
+              appState.attendance[studentId] = 'absent';
+              const studentDiv = document.getElementById(studentId);
+              if (studentDiv) {
+                  studentDiv.classList.remove('pending');
+                  studentDiv.classList.add('absent');
+              }
+          }
+      }
+      await logBatchAttendance(studentsToMarkAbsent, today, 'absent');
+      updateSummary();
+  }
+  
+  // --- Main App Logic & Routing ---
+  function handleAppInitialization() {
+    const path = window.location.pathname.toLowerCase();
 
-        function openMatchModal(matchId = null) {
-            const isEditing = matchId !== null;
-            const match = isEditing ? state.matches.find(m => m.id === matchId) : null;
-            const modalTitle = isEditing ? 'Editar Partido' : 'Registrar Nuevo Partido';
-            const [team1, team2] = state.teams;
-            const sortedPlayers = [...state.players].sort((a,b) => a.name.localeCompare(b.name));
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // User is signed in, this must be an admin.
+        userRole = 'admin';
+        setUIVisibility();
+      } else {
+        // No user signed in.
+        if (path.startsWith('/admin')) {
+          userRole = 'login'; // Show the login button view
+          setUIVisibility();
+        } else {
+          // On any other page, default to user role.
+          userRole = 'user';
+          setUIVisibility();
+        }
+      }
+    });
+  }
 
-            const generatePlayerCheckboxes = (teamNum, checkedPlayerIds = []) => {
-                return sortedPlayers.map(p => `
-                    <label class="flex items-center gap-2 p-1 rounded hover:bg-gray-100">
-                        <input type="checkbox" class="player-checkbox-team${teamNum}" value="${p.id}" ${checkedPlayerIds.includes(p.id) ? 'checked' : ''}>
-                        <img src="${p.photo || 'https://placehold.co/24x24/e2e8f0/64748b?text=%3F'}" class="w-6 h-6 rounded-full object-cover">
-                        <span>${p.name}</span>
-                    </label>
-                `).join('');
-            };
-            
-            const modalHTML = `
-            <div id="match-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                <div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
-                    <h3 class="text-2xl font-bold mb-4 border-b pb-2">${modalTitle}</h3>
-                    <form id="match-form" data-match-id="${isEditing ? matchId : ''}">
-                        <div><label class="block font-medium mb-1">Fecha</label><input type="date" id="match-date-modal" class="w-full p-2 border rounded-md" value="${isEditing ? match.date : new Date().toISOString().slice(0,10)}" required></div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block font-medium mb-1">${team1.name}</label><p id="team-1-score-display" class="text-5xl font-bold text-center py-2">0</p></div>
-                            <div><label class="block font-medium mb-1">${team2.name}</label><p id="team-2-score-display" class="text-5xl font-bold text-center py-2">0</p></div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                             <div><h4 class="font-semibold mb-2">Convocados ${team1.name}</h4><div class="max-h-40 overflow-y-auto border rounded p-2 space-y-1">${generatePlayerCheckboxes(1, match?.playersTeam1 || [])}</div></div>
-                            <div><h4 class="font-semibold mb-2">Convocados ${team2.name}</h4><div class="max-h-40 overflow-y-auto border rounded p-2 space-y-1">${generatePlayerCheckboxes(2, match?.playersTeam2 || [])}</div></div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                            <div id="team-1-scorers-modal" class="space-y-2"><h4 class="font-semibold">${team1.name}</h4><button type="button" class="add-scorer-btn" data-team-num="1"> + Goleador</button></div>
-                            <div id="team-2-scorers-modal" class="space-y-2"><h4 class="font-semibold">${team2.name}</h4><button type="button" class="add-scorer-btn" data-team-num="2"> + Goleador</button></div>
-                        </div>
-                        <div class="flex justify-end gap-3 pt-4 border-t"><button type="button" id="cancel-match-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">${isEditing ? 'Guardar Cambios' : 'Guardar Partido'}</button></div>
-                    </form>
-                </div>
-            </div>`;
-            openModal(modalHTML);
-        };
+  // Initial call
+  handleAppInitialization();
 
-        // --- MANEJADORES DE EVENTOS GLOBALES (DELEGADOS) ---
-        document.body.addEventListener('click', e => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
+  // --- Event Listeners ---
+  document.getElementById('login-admin-btn').addEventListener('click', () => {
+    auth.signInWithPopup(googleProvider).catch(error => {
+        console.error("Google Sign-In Error:", error);
+        alert("No se pudo iniciar sesión con Google.");
+    });
+  });
 
-            if (window.location.hash === '#admin') {
-                const id = parseInt(btn.dataset.id);
+  document.querySelectorAll('#shift-buttons button').forEach(btn=>{
+    btn.addEventListener('click', ()=>renderCourses(btn.dataset.shift));
+  });
+  dom.csvFileInput.addEventListener('change', e=>handleCsvImport(e.target.files[0]));
+  document.getElementById('import-csv-btn-initial').addEventListener('click', ()=>dom.csvFileInput.click());
+  document.getElementById('import-csv-btn-dashboard').addEventListener('click', ()=>dom.csvFileInput.click());
+  dom.wipeDbBtn.addEventListener('click', async ()=>{if(confirm('¿Seguro que quieres borrar todos los alumnos?')){await deleteAllStudents(); if(appState.currentShift){renderCourses(appState.currentShift);}}});
+  document.getElementById('export-csv-btn-dashboard').addEventListener('click', ()=>{
+    const dateStr = prompt('Introduce la fecha a exportar (YYYY-MM-DD)', new Date().toISOString().slice(0,10));
+    if(dateStr) exportFullDayCsv(dateStr);
+  });
+  dom.finalizeShiftBtn.addEventListener('click', finalizeShift);
+  document.getElementById('back-to-shifts').addEventListener('click', ()=>{dom.dashboard.classList.add('hidden'); dom.shiftSelection.classList.remove('hidden');});
 
-                if (btn.id === 'open-match-modal-btn') openMatchModal();
-                else if (btn.classList.contains('edit-match')) openMatchModal(id);
-                else if (btn.classList.contains('delete-match') && confirm('¿Borrar partido?')) { state.matches = state.matches.filter(m => m.id !== id); saveData(); }
-                else if (btn.classList.contains('edit-team')) openEditModal('team', id);
-                else if (btn.classList.contains('delete-team') && confirm('¿Seguro?')) { state.teams = state.teams.filter(t => t.id !== id); state.matches = []; saveData(); }
-                else if (btn.classList.contains('edit-player')) openEditModal('player', id);
-                else if (btn.classList.contains('delete-player')) { const player = getPlayerById(id); if (player && confirm(`¿Borrar a ${player.name}?`)) { state.players = state.players.filter(p => p.id !== id); /* Limpiar datos de partidos */ saveData(); } }
-                else if (btn.id === 'clear-data-button' && confirm('¿ESTÁS SEGURO?')) { state.teams=[]; state.players=[]; state.matches=[]; saveData(); }
-            }
+  dom.coursesContainer.addEventListener('click', async e=>{
+    const studentDiv = e.target.closest('.student-item');
+    const sporadicBtn = e.target.closest('.add-sporadic-btn');
+    
+    if (sporadicBtn) {
+        addSporadicStudent(sporadicBtn.dataset.course);
+        return;
+    }
 
-            if (btn.id === 'toggle-history-btn') {
-                const wrapper = document.getElementById('history-content-wrapper');
-                const arrow = document.getElementById('history-arrow');
-                const isHidden = !wrapper.style.maxHeight || wrapper.style.maxHeight === '0px';
-                wrapper.style.maxHeight = isHidden ? wrapper.scrollHeight + "px" : '0px';
-                arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-            }
-        });
-        
-        document.getElementById('modal-container').addEventListener('click', e => {
-             const target = e.target.closest('button');
-             if (!target) return;
-             
-             if(target.id === 'cancel-edit-btn' || target.id === 'cancel-match-btn') closeModal();
-             if(target.classList.contains('add-scorer-btn')) {
-                 const teamNum = parseInt(target.dataset.teamNum);
-                 const container = document.getElementById(`team-${teamNum}-scorers-modal`);
-                const sortedPlayers = [...state.players].sort((a,b) => a.name.localeCompare(b.name));
-                const playerOptions = sortedPlayers.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-                const el = document.createElement('div');
-                el.className = 'scorer-input-group flex gap-2 items-center';
-                el.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md"><option value="">Selecciona...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded" min="1" value="1"><button type="button" class="remove-scorer text-red-500 p-1">✖</button>`;
-                container.insertBefore(el, target);
-                const updateScore = () => {
-                    let s1=0, s2=0;
-                    document.querySelectorAll('#team-1-scorers-modal .scorer-input-group').forEach(g => s1 += parseInt(g.querySelector('.goals-input').value) || 0);
-                    document.querySelectorAll('#team-2-scorers-modal .scorer-input-group').forEach(g => s2 += parseInt(g.querySelector('.goals-input').value) || 0);
-                    document.getElementById('team-1-score-display').textContent = s1;
-                    document.getElementById('team-2-score-display').textContent = s2;
-                };
-                el.querySelector('.goals-input').oninput = updateScore;
-                el.querySelector('.remove-scorer').onclick = () => { el.remove(); updateScore(); };
-             }
+    if(!studentDiv) return;
+    const studentId = studentDiv.dataset.studentId;
+    let newState;
+    if(e.target.classList.contains('mark-absent-btn')){
+      newState = appState.attendance[studentId] === 'absent' ? 'pending' : 'absent';
+    } else {
+      newState = appState.attendance[studentId] === 'present' ? 'pending' : 'present';
+    }
+    appState.attendance[studentId] = newState;
 
-             if(target.id === 'save-edit-btn') {
-                const form = document.querySelector('#edit-form');
-                const type = form.dataset.type;
-                const id = parseInt(form.dataset.id);
-                const newName = document.getElementById('edit-name').value.trim();
-                const newUrl = document.getElementById('edit-photo-logo').value.trim();
-                if (!newName) { alert("El nombre no puede estar vacío."); return; }
+    studentDiv.classList.remove('pending','present','absent');
+    studentDiv.classList.add(newState);
+    updateSummary();
+    await logAttendance(studentId, new Date().toISOString().slice(0,10), newState);
+  });
 
-                if (type === 'team') {
-                    const team = getTeamById(id);
-                    if (team) { team.name = newName; team.logo = newUrl; }
-                } else {
-                    const player = getPlayerById(id);
-                    if (player) {
-                        const oldName = player.name;
-                        if (oldName !== newName) {
-                            state.matches.forEach(match => {
-                                (match.scorers || []).forEach(scorer => { if (scorer.player === oldName) { scorer.player = newName; } });
-                            });
-                        }
-                        player.name = newName; player.photo = newUrl;
-                    }
-                }
-                saveData();
-                closeModal();
-             }
-        });
-
-        document.getElementById('modal-container').addEventListener('submit', e => {
-            e.preventDefault();
-            if (e.target.id === 'match-form') {
-                 const form = e.target;
-                 const matchId = form.dataset.matchId ? parseInt(form.dataset.matchId) : null;
-                 const isEditing = matchId !== null;
-                 const [team1, team2] = state.teams;
-
-                 const date = document.getElementById('match-date-modal').value;
-                 if(!date){ alert('Falta la fecha'); return; }
-
-                 const playersTeam1 = Array.from(document.querySelectorAll('.player-checkbox-team1:checked')).map(cb => parseInt(cb.value));
-                 const playersTeam2 = Array.from(document.querySelectorAll('.player-checkbox-team2:checked')).map(cb => parseInt(cb.value));
-                 
-                 const scorers = [];
-                 document.querySelectorAll('.scorer-input-group').forEach(group => {
-                    const player = group.querySelector('.player-select').value;
-                    const goals = parseInt(group.querySelector('.goals-input').value) || 0;
-                    const teamId = group.closest('#team-1-scorers-modal') ? team1.id : team2.id;
-                    if(player && goals > 0) scorers.push({ player, goals, teamId });
-                 });
-
-                 const finalScorers = scorers.reduce((acc, s) => {
-                    const existing = acc.find(e => e.player === s.player && e.teamId === s.teamId);
-                    if(existing) existing.goals += s.goals; else acc.push(s);
-                    return acc;
-                 }, []);
-
-                 const newMatch = {
-                     id: isEditing ? matchId : Date.now(),
-                     date,
-                     teams: [
-                         { id: team1.id, score: parseInt(document.getElementById('team-1-score-display').textContent) },
-                         { id: team2.id, score: parseInt(document.getElementById('team-2-score-display').textContent) },
-                     ],
-                     playersTeam1,
-                     playersTeam2,
-                     scorers: finalScorers
-                 };
-                 if (isEditing) {
-                     const matchIndex = state.matches.findIndex(m => m.id === matchId);
-                     state.matches[matchIndex] = newMatch;
-                 } else {
-                     state.matches.push(newMatch);
-                 }
-                 saveData();
-                 closeModal();
-            }
-        });
-
-        document.getElementById('add-team-form').addEventListener('submit', (e) => { e.preventDefault(); if (state.teams.length >= 2) return; const name = document.getElementById('team-name').value.trim(); if (!name) return; state.teams.push({ id: Date.now(), name, logo: document.getElementById('team-logo').value.trim() }); e.target.reset(); saveData(); });
-        document.getElementById('add-player-form').addEventListener('submit', (e) => { e.preventDefault(); const name = document.getElementById('player-name').value.trim(); if (!name) return; if (getPlayerByName(name)) { alert('Jugador ya existe'); return; } state.players.push({ id: Date.now(), name, photo: document.getElementById('player-photo').value.trim() }); e.target.reset(); saveData(); });
-
-        
-        // --- INICIO DE LA APP ---
-        window.addEventListener('hashchange', navigate);
-        window.addEventListener('load', () => {
-            onAuthStateChanged(auth, user => {
-                loadData();
-            });
-        });
-
-    </script>
+});
+</script>
 </body>
 </html>
 
