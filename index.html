@@ -595,7 +595,7 @@
                 else if (btn.classList.contains('edit-team')) openEditModal('team', id);
                 else if (btn.classList.contains('delete-team') && confirm('¿Seguro?')) { state.teams = state.teams.filter(t => t.id !== id); state.matches = []; saveData(); }
                 else if (btn.classList.contains('edit-player')) openEditModal('player', id);
-                else if (btn.classList.contains('delete-player')) { const player = getPlayerById(id); if (player && confirm(`¿Borrar a ${player.name}?`)) { state.players = state.players.filter(p => p.id !== id); /* Limpiar datos de partidos */ saveData(); } }
+                else if (btn.classList.contains('delete-player')) { const player = getPlayerById(id); if (player && confirm(`¿Borrar a ${player.name}?`)) { state.players = state.players.filter(p => p.id !== id); state.matches.forEach(m => { m.scorers = (m.scorers || []).filter(s => s.player !== player.name); m.playersTeam1 = (m.playersTeam1 || []).filter(pId => pId !== id); m.playersTeam2 = (m.playersTeam2 || []).filter(pId => pId !== id); }); saveData(); } }
                 else if (btn.id === 'clear-data-button' && confirm('¿ESTÁS SEGURO?')) { state.teams=[]; state.players=[]; state.matches=[]; saveData(); }
             }
 
