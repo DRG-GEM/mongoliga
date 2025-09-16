@@ -179,32 +179,38 @@
         // --- NAVEGACIÓN Y VISTAS ---
         function navigate() {
             const hash = window.location.hash;
-            document.getElementById('main-view').classList.add('hidden');
-            document.getElementById('player-stats-view').classList.add('hidden');
-            document.getElementById('team-stats-view').classList.add('hidden');
-            document.getElementById('admin-view').classList.add('hidden'); 
-            document.getElementById('main-header').classList.remove('hidden');
+            const mainView = document.getElementById('main-view');
+            const playerStatsView = document.getElementById('player-stats-view');
+            const teamStatsView = document.getElementById('team-stats-view');
+            const adminView = document.getElementById('admin-view');
+            const mainHeader = document.getElementById('main-header');
+
+            mainView.classList.add('hidden');
+            playerStatsView.classList.add('hidden');
+            teamStatsView.classList.add('hidden');
+            adminView.classList.add('hidden'); 
+            mainHeader.classList.remove('hidden');
 
             renderAuthUI(auth.currentUser);
 
             if (hash.startsWith('#/player/')) {
                 const playerName = decodeURIComponent(hash.substring(9));
                 renderPlayerStatsPage(playerName);
-                document.getElementById('player-stats-view').classList.remove('hidden');
-                document.getElementById('main-header').classList.add('hidden');
+                playerStatsView.classList.remove('hidden');
+                mainHeader.classList.add('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else if (hash.startsWith('#/team/')) {
                 const teamName = decodeURIComponent(hash.substring(7));
                 renderTeamStatsPage(teamName);
-                document.getElementById('team-stats-view').classList.remove('hidden');
-                document.getElementById('main-header').classList.add('hidden');
+                teamStatsView.classList.remove('hidden');
+                mainHeader.classList.add('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else if (hash === '#admin') {
                 if (auth.currentUser && ADMIN_UIDS.includes(auth.currentUser.uid)) {
-                    document.getElementById('admin-view').classList.remove('hidden');
+                    adminView.classList.remove('hidden');
                 }
             } else {
-                document.getElementById('main-view').classList.remove('hidden');
+                mainView.classList.remove('hidden');
             }
         }
         
@@ -481,6 +487,7 @@
             playerTeamSelect.innerHTML = '<option value="">Asignar equipo principal</option>';
             state.teams.forEach(t => playerTeamSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`);
 
+            container.innerHTML = '';
             if (state.players.length === 0) { container.innerHTML = '<p class="text-gray-500">Añade jugadores.</p>'; } 
             else {
                 state.players.sort((a, b) => a.name.localeCompare(b.name)).forEach(player => {
@@ -542,7 +549,7 @@
             if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; 
             return ` <ul class="space-y-2"> ${sortedScorers.map(([playerName, goals], index) => { 
                 const player = getPlayerByName(playerName); 
-                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-clipart/20250515/original/pngtree-cristiano-ronaldo-golden-boot-award-achievement-png-image_20984864.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
+                const goldenBoot = index === 0 ? '<img src="https://i.imgur.com/k246a2D.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
                     <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
                         <img src="${(player && player.photo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F'}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
@@ -597,7 +604,7 @@
 
             let teamSelectHTML = '';
             if (type === 'player') {
-                const teamOptions = state.teams.map(t => `<option value="${t.id}" ${item.teamId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+                const teamOptions = state.teams.map(t => `<option value="${t.id}" ${item.teamId == t.id ? 'selected' : ''}>${t.name}</option>`).join('');
                 teamSelectHTML = `<div><label class="block text-sm font-medium">Equipo Principal</label><select id="edit-player-team" class="mt-1 w-full p-2 border rounded-md"><option value="">Ninguno</option>${teamOptions}</select></div>`;
             }
 
