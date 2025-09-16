@@ -169,7 +169,7 @@
         
         const ADMIN_UIDS = ["96GY6i4IDXPQj2aA68Rxc7zoZj02", "kZPPWJhrjaRd63ET2gPcnj4ZqIr2"];
 
-        const app = initializeApp(firebaseConfig);
+       const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const leagueDocRef = doc(db, "leagueData", "main");
@@ -355,8 +355,8 @@
             container.innerHTML = `
                 <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
                     <a href="#" class="text-blue-500 mb-6 inline-block">&larr; Volver a la liga</a>
-                    <div class="flex flex-col sm:flex-row gap-6 md:gap-8">
-                        <div class="sm:w-1/3 flex-shrink-0 w-full">
+                    <div class="flex flex-row gap-4 md:gap-8">
+                        <div class="w-1/3 flex-shrink-0">
                             <div class="bg-gray-800 rounded-xl shadow-lg text-white p-3 relative aspect-[3/4.2] flex flex-col justify-end">
                                 <img src="${player.photo || 'https://placehold.co/300x400/1f2937/ffffff?text=Sin+Foto'}" 
                                      onerror="this.onerror=null;this.src='https://placehold.co/300x400/1f2937/ffffff?text=Error';"
@@ -364,22 +364,22 @@
                                      class="absolute top-0 left-0 w-full h-full object-cover rounded-xl opacity-80">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-xl"></div>
                                 <div class="relative z-10 p-2">
-                                    <h2 class="text-3xl lg:text-4xl font-black tracking-tighter uppercase">${player.name}</h2>
-                                    <p class="text-lg text-yellow-300 font-semibold">Mongoliga 25/26</p>
+                                    <h2 class="text-xl md:text-3xl lg:text-4xl font-black tracking-tighter uppercase">${player.name}</h2>
+                                    <p class="text-sm md:text-lg text-yellow-300 font-semibold">Mongoliga 25/26</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-grow w-full">
-                            <h3 class="text-2xl font-bold mb-4">Estadísticas de Temporada</h3>
-                            <div class="grid grid-cols-2 gap-4 text-center">
-                                <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${played}</p><p class="text-sm text-gray-600">Partidos</p></div>
-                                <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goals}</p><p class="text-sm text-gray-600">Goles</p></div>
-                                <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsPerMatch}</p><p class="text-sm text-gray-600">Goles / Partido</p></div>
-                                <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${winRate}%</p><p class="text-sm text-gray-600">% Victorias</p></div>
+                        <div class="w-2/3 flex-grow">
+                            <h3 class="text-xl md:text-2xl font-bold mb-4">Estadísticas</h3>
+                            <div class="grid grid-cols-2 gap-2 text-center">
+                                <div class="bg-gray-100 p-2 md:p-4 rounded-lg"><p class="text-lg md:text-3xl font-bold">${played}</p><p class="text-xs md:text-sm text-gray-600">Partidos</p></div>
+                                <div class="bg-gray-100 p-2 md:p-4 rounded-lg"><p class="text-lg md:text-3xl font-bold">${goals}</p><p class="text-sm text-gray-600">Goles</p></div>
+                                <div class="bg-gray-100 p-2 md:p-4 rounded-lg"><p class="text-lg md:text-3xl font-bold">${goalsPerMatch}</p><p class="text-xs md:text-sm text-gray-600">Goles / Par.</p></div>
+                                <div class="bg-gray-100 p-2 md:p-4 rounded-lg"><p class="text-lg md:text-3xl font-bold">${winRate}%</p><p class="text-xs md:text-sm text-gray-600">% Victorias</p></div>
                             </div>
-                            <h3 class="text-2xl font-bold mt-8 mb-4">Historial de Partidos</h3>
+                            <h3 class="text-xl md:text-2xl font-bold mt-6 mb-4">Historial</h3>
                             <div class="space-y-4 max-h-[19rem] sm:max-h-[22rem] overflow-y-auto pr-2">
-                                ${playerMatches.length > 0 ? [...playerMatches].reverse().map(m => generateMatchResultHTML(m)).join('') : '<p class="text-gray-500">Sin partidos registrados.</p>'}
+                                ${playerMatches.length > 0 ? [...playerMatches].reverse().map(m => generateMatchResultHTML(m)).join('') : '<p class="text-gray-500">Sin partidos.</p>'}
                             </div>
                         </div>
                     </div>
