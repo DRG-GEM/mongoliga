@@ -614,38 +614,38 @@
         }
 
         function generateTopScorersHTML(sortedScorers) { 
-            if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; 
-            return ` <ul class="space-y-2"> ${sortedScorers.map(([playerName, goals], index) => { 
-                const player = getPlayerByName(playerName); 
-                const team = player ? getTeamById(player.teamId) : null;
-                const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-clipart/20250515/original/pngtree-cristiano-ronaldo-golden-boot-award-achievement-png-image_20984864.png" alt="Bota de Oro" class="w-8 h-8 ml-1">' : '';
-                return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
-                    <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
-                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
-                        <span class="font-medium">${index + 1}. ${playerName}</span> ${goldenBoot}
-                    </a> 
-                    <span class="font-bold text-lg">${goals}</span> 
-                </li>` 
-            }).join('')} </ul>`; 
-        }
-        
-        function generateZamoraHTML(sortedZamora) {
-            if (sortedZamora.length === 0) return '<p class="text-gray-500">No hay datos de porteros.</p>';
-            return ` <ul class="space-y-2"> ${sortedZamora.map((z, index) => { 
-                const team = getTeamById(z.player.teamId);
-                const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenGlove = index === 0 ? '<img src="https://png.pngtree.com/png-clipart/20241006/original/pngtree-golden-soccer-goalkeeper-gloves-png-image_16221226.png" alt="Guantes de Oro" class="w-8 h-8 ml-1">' : '';
-                return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-blue-100' : ''}"> 
-                    <a href="#/player/${encodeURIComponent(z.player.name)}" class="flex items-center gap-3 hover:underline"> 
-                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
-                        <span class="font-medium">${index + 1}. ${z.player.name} ${goldenGlove}</span> 
-                    </a> 
-                    <span class="font-bold text-lg">${z.avg}</span> 
-                </li>` 
-            }).join('')} </ul>`;
-        }
+            if (sortedScorers.length === 0) return '<p class="text-gray-500">Sin goles registrados.</p>'; 
+            return ` <ul class="space-y-2"> ${sortedScorers.map(([playerName, goals], index) => { 
+                const player = getPlayerByName(playerName); 
+                const team = player ? getTeamById(player.teamId) : null;
+                const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
+                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-vector/20241107/ourlarge/pngtree-3d-golden-football-boot-on-a-transparent-background-png-image_14223096.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
+                return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
+                    <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
+                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
+                        <span class="font-medium">${index + 1}. ${playerName}</span> ${goldenBoot}
+                    </a> 
+                    <span class="font-bold text-lg">${goals}</span> 
+                </li>` 
+            }).join('')} </ul>`; 
+        }
         
+        function generateZamoraHTML(sortedZamora) {
+            if (sortedZamora.length === 0) return '<p class="text-gray-500">No hay datos de porteros.</p>';
+            return ` <ul class="space-y-2"> ${sortedZamora.map((z, index) => { 
+                const team = getTeamById(z.player.teamId);
+                const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
+                const goldenGlove = index === 0 ? '🧤' : '';
+                return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-blue-100' : ''}"> 
+                    <a href="#/player/${encodeURIComponent(z.player.name)}" class="flex items-center gap-3 hover:underline"> 
+                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
+                        <span class="font-medium">${index + 1}. ${z.player.name} ${goldenGlove}</span> 
+                    </a> 
+                    <span class="font-bold text-lg">${z.avg}</span> 
+                </li>` 
+            }).join('')} </ul>`;
+        }
+
         function generateMatchResultHTML(match) { 
             const team1 = getTeamById(match.teams[0].id); 
             const team2 = getTeamById(match.teams[1].id); 
