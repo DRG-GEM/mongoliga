@@ -441,8 +441,8 @@
                                 <img src="${player.photo || 'https://placehold.co/300x400/1f2937/ffffff?text=Sin+Foto'}" 
                                      onerror="this.onerror=null;this.src='https://placehold.co/300x400/1f2937/ffffff?text=Error';"
                                      alt="Foto de ${player.name}" 
-                                     class="absolute top-0 left-0 w-full h-full object-cover rounded-xl opacity-70">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-xl"></div>
+                                     class="absolute top-0 left-0 w-full h-full object-cover rounded-xl opacity-80">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent rounded-xl"></div>
                                 <div class="relative z-10 p-2">
                                     <h2 class="text-3xl lg:text-4xl font-black tracking-tighter uppercase">${player.name}</h2>
                                     <p class="text-lg text-yellow-300 font-semibold">Mongoliga 25/26</p>
@@ -615,7 +615,7 @@
                 const player = getPlayerByName(playerName); 
                 const team = player ? getTeamById(player.teamId) : null;
                 const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenBoot = index === 0 ? '<img src="https://i.imgur.com/k246a2D.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
+                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-clipart/20250515/original/pngtree-cristiano-ronaldo-golden-boot-award-achievement-png-image_20984864.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
                     <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
                         <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
