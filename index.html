@@ -168,6 +168,7 @@
             });
         }
 
+
         const firebaseConfig = {
   apiKey: "AIzaSyCh6Eupmi9fpmUqa2K7994jjKUqXdweAUY",
   authDomain: "mongoliga-39101.firebaseapp.com",
@@ -366,7 +367,7 @@
                 return;
             }
 
-            let gamesAsPlayer = 0, gamesAsGk = 0, goalsScored = 0, goalsConceded = 0, wins = 0;
+            let gamesAsPlayer = 0, gamesAsGk = 0, goalsScored = 0, goalsConceded = 0, winsAsPlayer = 0, winsAsGk = 0;
             const playerMatches = new Set();
 
             state.matches.forEach(match => {
@@ -381,55 +382,57 @@
 
                 if (isPlayerInTeam1 || isPlayerInTeam2 || isGkInTeam1 || isGkInTeam2) {
                     playerMatches.add(match);
-                    if (isPlayerInTeam1 || isPlayerInTeam2) gamesAsPlayer++;
-                    if (isGkInTeam1 || isGkInTeam2) {
-                        gamesAsGk++;
-                        goalsConceded += isGkInTeam1 ? match.teams[1].score : match.teams[0].score;
-                    }
-                    
-                    const playerTeamId = isPlayerInTeam1 || isGkInTeam1 ? team1.id : team2.id;
-                    const playerTeamScore = playerTeamId === team1.id ? match.teams[0].score : match.teams[1].score;
-                    const opponentScore = playerTeamId === team1.id ? match.teams[1].score : match.teams[0].score;
-                    if (playerTeamScore > opponentScore) wins++;
                 }
+
+                if (isPlayerInTeam1 || isPlayerInTeam2) {
+                    gamesAsPlayer++;
+                    const playerTeamScore = isPlayerInTeam1 ? match.teams[0].score : match.teams[1].score;
+                    const opponentScore = isPlayerInTeam1 ? match.teams[1].score : match.teams[0].score;
+                    if (playerTeamScore > opponentScore) winsAsPlayer++;
+                }
+                 if (isGkInTeam1 || isGkInTeam2) {
+                    gamesAsGk++;
+                    goalsConceded += isGkInTeam1 ? match.teams[1].score : match.teams[0].score;
+                    const playerTeamScore = isGkInTeam1 ? match.teams[0].score : match.teams[1].score;
+                    const opponentScore = isGkInTeam1 ? match.teams[1].score : match.teams[0].score;
+                    if (playerTeamScore > opponentScore) winsAsGk++;
+                }
+
                 (match.scorers || []).forEach(scorer => { if (scorer.player === playerName) goalsScored += scorer.goals; });
             });
 
-            const totalGames = playerMatches.size;
-            const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(0) : 0;
+            const winRatePlayer = gamesAsPlayer > 0 ? ((winsAsPlayer / gamesAsPlayer) * 100).toFixed(0) : 0;
+            const winRateGk = gamesAsGk > 0 ? ((winsAsGk / gamesAsGk) * 100).toFixed(0) : 0;
             const goalsPerMatch = gamesAsPlayer > 0 ? (goalsScored / gamesAsPlayer).toFixed(2) : 0;
             const concededAvg = gamesAsGk > 0 ? (goalsConceded / gamesAsGk).toFixed(2) : 0;
 
             let statsHTML = '';
-            if (gamesAsPlayer > 0 && gamesAsGk > 0) { // Híbrido
+            if (player.isGoalkeeper && gamesAsPlayer > 0) { // Híbrido
                 statsHTML = `
-                <h3 class="text-2xl font-bold mb-4">Estadísticas de Temporada</h3>
-                <div class="grid grid-cols-3 gap-4 text-center">
-                    <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${gamesAsPlayer}</p><p class="text-sm text-gray-600">P. Jugador</p></div>
-                    <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsScored}</p><p class="text-sm text-gray-600">Goles</p></div>
-                    <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsPerMatch}</p><p class="text-sm text-gray-600">Goles/Par.</p></div>
-                    <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${gamesAsGk}</p><p class="text-sm text-gray-600">P. Portero</p></div>
-                    <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsConceded}</p><p class="text-sm text-gray-600">G. Encajados</p></div>
-                    <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${concededAvg}</p><p class="text-sm text-gray-600">Media Enc.</p></div>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Como Jugador</h3>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${gamesAsPlayer}</p><p class="text-sm text-gray-600">Partidos</p></div>
+                            <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsScored}</p><p class="text-sm text-gray-600">Goles</p></div>
+                            <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsPerMatch}</p><p class="text-sm text-gray-600">Goles/Par.</p></div>
+                            <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${winRatePlayer}%</p><p class="text-sm text-gray-600">% Victorias</p></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Como Portero</h3>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                             <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${gamesAsGk}</p><p class="text-sm text-gray-600">Partidos</p></div>
+                            <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsConceded}</p><p class="text-sm text-gray-600">G. Encajados</p></div>
+                            <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${concededAvg}</p><p class="text-sm text-gray-600">Media Enc.</p></div>
+                            <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${winRateGk}%</p><p class="text-sm text-gray-600">% Victorias</p></div>
+                        </div>
+                    </div>
                 </div>`;
-            } else if (gamesAsPlayer > 0) { // Solo jugador
-                statsHTML = `
-                <h3 class="text-2xl font-bold mb-4">Estadísticas de Temporada</h3>
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${totalGames}</p><p class="text-sm text-gray-600">Partidos</p></div>
-                    <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsScored}</p><p class="text-sm text-gray-600">Goles</p></div>
-                    <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsPerMatch}</p><p class="text-sm text-gray-600">Goles / Partido</p></div>
-                    <div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${winRate}%</p><p class="text-sm text-gray-600">% Victorias</p></div>
-                </div>`;
-            } else if (gamesAsGk > 0) { // Solo portero
-                statsHTML = `
-                <h3 class="text-2xl font-bold mb-4">Estadísticas de Temporada</h3>
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${totalGames}</p><p class="text-sm text-gray-600">Partidos</p></div>
-                    <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsConceded}</p><p class="text-sm text-gray-600">Goles Encajados</p></div>
-                    <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${concededAvg}</p><p class="text-sm text-gray-600">Media Encajada</p></div>
-                    <div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${winRate}%</p><p class="text-sm text-gray-600">% Victorias</p></div>
-                </div>`;
+            } else if (player.isGoalkeeper) { // Solo portero
+                statsHTML = `<h3 class="text-2xl font-bold mb-4">Estadísticas de Temporada</h3><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${gamesAsGk}</p><p class="text-sm text-gray-600">Partidos</p></div><div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsConceded}</p><p class="text-sm text-gray-600">Goles Encajados</p></div><div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${concededAvg}</p><p class="text-sm text-gray-600">Media Encajada</p></div><div class="bg-blue-50 p-4 rounded-lg"><p class="text-3xl font-bold">${winRateGk}%</p><p class="text-sm text-gray-600">% Victorias</p></div></div>`;
+            } else { // Solo jugador
+                statsHTML = `<h3 class="text-2xl font-bold mb-4">Estadísticas de Temporada</h3><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${gamesAsPlayer}</p><p class="text-sm text-gray-600">Partidos</p></div><div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsScored}</p><p class="text-sm text-gray-600">Goles</p></div><div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${goalsPerMatch}</p><p class="text-sm text-gray-600">Goles / Partido</p></div><div class="bg-gray-100 p-4 rounded-lg"><p class="text-3xl font-bold">${winRatePlayer}%</p><p class="text-sm text-gray-600">% Victorias</p></div></div>`;
             }
 
             container.innerHTML = `
@@ -468,13 +471,7 @@
             }
             
             let played = 0, wins = 0, draws = 0, losses = 0, gf = 0, ga = 0, pts = 0;
-            const teamPlayerIds = new Set();
-
-            state.players.forEach(p => {
-                if (p.teamId === team.id) {
-                    teamPlayerIds.add(p.id);
-                }
-            });
+            
             state.matches.forEach(match => {
                 let isTeam1 = match.teams[0].id === team.id;
                 let isTeam2 = match.teams[1].id === team.id;
@@ -487,15 +484,10 @@
                     if (teamScore > opponentScore) { wins++; pts += 3; }
                     else if (teamScore < opponentScore) losses++;
                     else { draws++; pts += 1; }
-
-                    const playerIds = isTeam1 ? match.playersTeam1 : match.playersTeam2;
-                    (playerIds || []).forEach(id => teamPlayerIds.add(id));
-                    if(isTeam1 && match.goalkeeperId1) teamPlayerIds.add(match.goalkeeperId1);
-                    if(isTeam2 && match.goalkeeperId2) teamPlayerIds.add(match.goalkeeperId2);
                 }
             });
 
-            const teamPlayers = Array.from(teamPlayerIds).map(id => getPlayerById(id)).filter(Boolean).sort((a,b) => a.name.localeCompare(b.name));
+            const teamPlayers = state.players.filter(p => p.teamId === team.id).sort((a,b) => a.name.localeCompare(b.name));
             
             container.innerHTML = `
                 <div class="bg-white p-6 rounded-xl shadow-md">
@@ -619,7 +611,7 @@
                 const player = getPlayerByName(playerName); 
                 const team = player ? getTeamById(player.teamId) : null;
                 const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-clipart/20250515/original/pngtree-cristiano-ronaldo-golden-boot-award-achievement-png-image_20984864.png" alt="Bota de Oro" class="w-8 h-8 ml-1">' : '';
+                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-vector/20241107/ourlarge/pngtree-3d-golden-football-boot-on-a-transparent-background-png-image_14223096.png" alt="Bota de Oro" class="w-8 h-8 ml-1">' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
                     <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
                         <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
@@ -635,7 +627,7 @@
             return ` <ul class="space-y-2"> ${sortedZamora.map((z, index) => { 
                 const team = getTeamById(z.player.teamId);
                 const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenGlove = index === 0 ? '<img src="https://png.pngtree.com/png-clipart/20241006/original/pngtree-golden-soccer-goalkeeper-gloves-png-image_16221226.png" alt="Guantes de Oro" class="w-8 h-8 ml-1">' : '';
+                const goldenGlove = index === 0 ? '<img src="https://png.pngtree.com/png-vector/20240806/ourlarge/pngtree-golden-futsal-goalkeeper-gloves-png-image_13393243.png" alt="Guantes de Oro" class="w-8 h-8 ml-1">' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-blue-100' : ''}"> 
                     <a href="#/player/${encodeURIComponent(z.player.name)}" class="flex items-center gap-3 hover:underline"> 
                         <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
@@ -915,5 +907,6 @@
     </script>
 </body>
 </html>
+
 
 
