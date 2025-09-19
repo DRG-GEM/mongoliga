@@ -757,6 +757,28 @@
                 </div>
             </div>`;
             openModal(modalHTML);
+
+            if (isEditing) {
+                const addScorerRowToModal = (teamNum, scorer) => {
+                    const container = document.getElementById(`team-${teamNum}-scorers-modal`);
+                    const playerOptions = sortedPlayers.map(p => `<option value="${p.name}" ${scorer && scorer.player === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
+                    const el = document.createElement('div');
+                    el.className = 'scorer-input-group flex gap-2 items-center';
+                    el.innerHTML = `<select class="player-select w-2/3 p-2 border rounded-md"><option value="">Selecciona...</option>${playerOptions}</select><input type="number" class="goals-input w-1/3 p-2 border rounded" min="1" value="${scorer ? scorer.goals : 1}"><button type="button" class="remove-scorer text-red-500 p-1">✖</button>`;
+                    container.insertBefore(el, container.querySelector('.add-scorer-btn'));
+                    const updateScore = () => {
+                        let s1=0, s2=0;
+                        document.querySelectorAll('#team-1-scorers-modal .scorer-input-group').forEach(g => s1 += parseInt(g.querySelector('.goals-input').value) || 0);
+                        document.querySelectorAll('#team-2-scorers-modal .scorer-input-group').forEach(g => s2 += parseInt(g.querySelector('.goals-input').value) || 0);
+                        document.getElementById('team-1-score-display').textContent = s1;
+                        document.getElementById('team-2-score-display').textContent = s2;
+                    };
+                    el.querySelector('.goals-input').oninput = updateScore;
+                    el.querySelector('.remove-scorer').onclick = () => { el.remove(); updateScore(); };
+                    updateScore();
+                };
+                (match.scorers || []).forEach(s => addScorerRowToModal(s.teamId === team1.id ? 1 : 2, s));
+            }
         };
 
         // --- MANEJADORES DE EVENTOS GLOBALES (DELEGADOS) ---
