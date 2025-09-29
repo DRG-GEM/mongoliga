@@ -930,6 +930,43 @@
         document.getElementById('add-team-form').addEventListener('submit', (e) => { e.preventDefault(); if (state.teams.length >= 2) return; const name = document.getElementById('team-name').value.trim(); if (!name) return; state.teams.push({ id: Date.now(), name, logo: document.getElementById('team-logo').value.trim() }); e.target.reset(); saveData(); });
         document.getElementById('add-player-form').addEventListener('submit', (e) => { e.preventDefault(); const name = document.getElementById('player-name').value.trim(); const teamId = parseInt(document.getElementById('player-team').value); const isGoalkeeper = document.getElementById('player-is-goalkeeper').checked; if (!name) return; if (getPlayerByName(name)) { alert('Jugador ya existe'); return; } state.players.push({ id: Date.now(), name, photo: document.getElementById('player-photo').value.trim(), teamId: teamId || null, isGoalkeeper }); e.target.reset(); saveData(); });
 
+        async function shareBlock(elementId, title) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const buttons = element.querySelectorAll('.share-btn');
+            buttons.forEach(btn => btn.style.display = 'none');
+
+            try {
+                const canvas = await html2canvas(element, {
+                    backgroundColor: '#f1f5f9', // bg-slate-100
+                    scale: 2 
+                });
+                
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `${title.toLowerCase().replace(/\s/g, '_')}.png`, { type: 'image/png' });
+                    const shareData = {
+                        title: `Mongoliga - ${title}`,
+                        text: `¡Mira las estadísticas de ${title} de la Mongoliga!`,
+                        files: [file]
+                    };
+
+                    if (navigator.canShare && navigator.canShare(shareData)) {
+                        await navigator.share(shareData);
+                    } else {
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `mongoliga_${title.toLowerCase().replace(/\s/g, '_')}.png`;
+                        link.click();
+                    }
+                }, 'image/png');
+
+            } catch (error) {
+                console.error('Error al compartir:', error);
+            } finally {
+                 buttons.forEach(btn => btn.style.display = 'block');
+            }
+        }
         
         // --- INICIO DE LA APP ---
         onAuthStateChanged(auth, user => {
