@@ -762,7 +762,7 @@
                 </div>
             </div>`;
             openModal(modalHTML);
-
+            
             const addScorerRowToModal = (teamNum, scorer = null) => {
                 const container = document.getElementById(`team-${teamNum}-scorers-modal`);
                 const playerOptions = sortedPlayers.map(p => `<option value="${p.name}" ${scorer && scorer.player === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
