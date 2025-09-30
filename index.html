@@ -616,7 +616,7 @@
                 const player = getPlayerByName(playerName); 
                 const team = player ? getTeamById(player.teamId) : null;
                 const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-vector/20241107/ourlarge/pngtree-3d-golden-football-boot-on-a-transparent-background-png-image_14223096.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
+                const goldenBoot = index === 0 ? '<img src="https://cdn.jsdelivr.net/gh/DRG-GEM/mongoliga/boot.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
                     <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
                         <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
@@ -632,7 +632,7 @@
             return ` <ul class="space-y-2"> ${sortedZamora.map((z, index) => { 
                 const team = getTeamById(z.player.teamId);
                 const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenGlove = index === 0 ? '🧤' : '';
+                const goldenGlove = index === 0 ? '<img src="https://cdn.jsdelivr.net/gh/DRG-GEM/mongoliga/gloves.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-blue-100' : ''}"> 
                     <a href="#/player/${encodeURIComponent(z.player.name)}" class="flex items-center gap-3 hover:underline"> 
                         <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
