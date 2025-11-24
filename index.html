@@ -64,24 +64,24 @@
         <div id="main-view">
              <div class="space-y-8">
                 <div id="latest-results-card" class="bg-white p-6 rounded-xl shadow-md relative">
-                    <button data-share-id="latest-results-card" data-share-title="Últimos Resultados" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
+                    <button data-share-id="latest-results-card" data-share-title="Últimos Resultados" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
                     <h2 class="text-2xl font-bold mb-4 border-b pb-2">Últimos 5 Partidos</h2>
                     <div id="latest-results" class="space-y-4"></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div id="standings-card" class="bg-white p-6 rounded-xl shadow-md relative">
-                        <button data-share-id="standings-card" data-share-title="Clasificación" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
+                        <button data-share-id="standings-card" data-share-title="Clasificación" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Clasificación</h2>
                         <div id="public-standings"></div>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-md space-y-6">
                         <div id="scorers-card" class="relative">
-                            <button data-share-id="scorers-card" data-share-title="Pichichi" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
+                            <button data-share-id="scorers-card" data-share-title="Pichichi" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
                             <h2 class="text-2xl font-bold mb-4 border-b pb-2">Pichichi</h2>
                             <div id="public-top-scorers"></div>
                         </div>
                          <div id="zamora-card" class="relative">
-                            <button data-share-id="zamora-card" data-share-title="Zamora" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
+                            <button data-share-id="zamora-card" data-share-title="Zamora" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
                             <h2 class="text-2xl font-bold mb-4 border-b pb-2">Zamora</h2>
                             <div id="public-zamora"></div>
                         </div>
@@ -175,15 +175,16 @@
         }
 
         const firebaseConfig = {
-  apiKey: "AIzaSyCh6Eupmi9fpmUqa2K7994jjKUqXdweAUY",
-  authDomain: "mongoliga-39101.firebaseapp.com",
-  projectId: "mongoliga-39101",
-  storageBucket: "mongoliga-39101.firebasestorage.app",
-  messagingSenderId: "90986575463",
-  appId: "1:90986575463:web:14f261d8339972966686c2"
-};
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_AUTH_DOMAIN",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_STORAGE_BUCKET",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
         
-        const ADMIN_UIDS = ["96GY6i4IDXPQj2aA68Rxc7zoZj02", "kZPPWJhrjaRd63ET2gPcnj4ZqIr2"];
+        // AÑADE AQUÍ LOS UIDs DE LOS ADMINISTRADORES
+        const ADMIN_UIDS = ["TU_UID_PRINCIPAL", "OTRO_UID_SI_QUIERES"];
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -616,11 +617,12 @@
                 const player = getPlayerByName(playerName); 
                 const team = player ? getTeamById(player.teamId) : null;
                 const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenBoot = index === 0 ? '<img src="https://cdn.jsdelivr.net/gh/DRG-GEM/mongoliga/boot.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
+                const goldenBoot = index === 0 ? '<img src="https://png.pngtree.com/png-vector/20241107/ourlarge/pngtree-3d-golden-football-boot-on-a-transparent-background-png-image_14223096.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-yellow-100' : (index === 1 ? 'bg-gray-200' : (index === 2 ? 'bg-amber-50' : ''))}"> 
-                    <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline"> 
-                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
-                        <span class="font-medium">${index + 1}. ${playerName}</span> ${goldenBoot}
+                    <a href="#/player/${encodeURIComponent(playerName)}" class="flex items-center gap-3 hover:underline flex-grow"> 
+                        <span class="font-bold text-gray-500 w-4 text-right mr-1">${index + 1}.</span>
+                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300 border border-gray-300"> 
+                        <span class="font-medium">${playerName}</span> ${goldenBoot}
                     </a> 
                     <span class="font-bold text-lg">${goals}</span> 
                 </li>` 
@@ -632,11 +634,12 @@
             return ` <ul class="space-y-2"> ${sortedZamora.map((z, index) => { 
                 const team = getTeamById(z.player.teamId);
                 const logoSrc = (team && team.logo) || 'https://placehold.co/32x32/e2e8f0/64748b?text=%3F';
-                const goldenGlove = index === 0 ? '<img src="https://cdn.jsdelivr.net/gh/DRG-GEM/mongoliga/gloves.png" alt="Bota de Oro" class="w-5 h-5 ml-1">' : '';
+                const goldenGlove = index === 0 ? '🧤' : '';
                 return `<li class="flex justify-between items-center p-2 rounded-md ${index === 0 ? 'bg-blue-100' : ''}"> 
-                    <a href="#/player/${encodeURIComponent(z.player.name)}" class="flex items-center gap-3 hover:underline"> 
-                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300"> 
-                        <span class="font-medium">${index + 1}. ${z.player.name} ${goldenGlove}</span> 
+                    <a href="#/player/${encodeURIComponent(z.player.name)}" class="flex items-center gap-3 hover:underline flex-grow"> 
+                        <span class="font-bold text-gray-500 w-4 text-right mr-1">${index + 1}.</span>
+                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300 border border-gray-300"> 
+                        <span class="font-medium">${z.player.name}</span> ${goldenGlove} 
                     </a> 
                     <span class="font-bold text-lg">${z.avg}</span> 
                 </li>` 
@@ -762,7 +765,7 @@
                 </div>
             </div>`;
             openModal(modalHTML);
-            
+
             const addScorerRowToModal = (teamNum, scorer = null) => {
                 const container = document.getElementById(`team-${teamNum}-scorers-modal`);
                 const playerOptions = sortedPlayers.map(p => `<option value="${p.name}" ${scorer && scorer.player === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
@@ -978,6 +981,3 @@
     </script>
 </body>
 </html>
-
-
-
