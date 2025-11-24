@@ -174,17 +174,17 @@
             });
         }
 
+        // ¡¡¡ATENCIÓN!!! TIENES QUE PONER AQUÍ TUS CLAVES DE NUEVO
         const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "TU_AUTH_DOMAIN",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_STORAGE_BUCKET",
-            messagingSenderId: "TU_MESSAGING_SENDER_ID",
-            appId: "TU_APP_ID"
-        };
+  apiKey: "AIzaSyCh6Eupmi9fpmUqa2K7994jjKUqXdweAUY",
+  authDomain: "mongoliga-39101.firebaseapp.com",
+  projectId: "mongoliga-39101",
+  storageBucket: "mongoliga-39101.firebasestorage.app",
+  messagingSenderId: "90986575463",
+  appId: "1:90986575463:web:14f261d8339972966686c2"
+};
         
-        // AÑADE AQUÍ LOS UIDs DE LOS ADMINISTRADORES
-        const ADMIN_UIDS = ["TU_UID_PRINCIPAL", "OTRO_UID_SI_QUIERES"];
+        const ADMIN_UIDS = ["96GY6i4IDXPQj2aA68Rxc7zoZj02", "kZPPWJhrjaRd63ET2gPcnj4ZqIr2"];
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -639,7 +639,7 @@
                     <a href="#/player/${encodeURIComponent(z.player.name)}" class="flex items-center gap-3 hover:underline flex-grow"> 
                         <span class="font-bold text-gray-500 w-4 text-right mr-1">${index + 1}.</span>
                         <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover bg-gray-300 border border-gray-300"> 
-                        <span class="font-medium">${z.player.name}</span> ${goldenGlove} 
+                        <span class="font-medium">${z.player.name} ${goldenGlove}</span> 
                     </a> 
                     <span class="font-bold text-lg">${z.avg}</span> 
                 </li>` 
