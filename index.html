@@ -64,24 +64,24 @@
         <div id="main-view">
              <div class="space-y-8">
                 <div id="latest-results-card" class="bg-white p-6 rounded-xl shadow-md relative">
-                    <button data-share-id="latest-results-card" data-share-title="Últimos Resultados" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
+                    <button data-share-id="latest-results-card" data-share-title="Últimos Resultados" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
                     <h2 class="text-2xl font-bold mb-4 border-b pb-2">Últimos 5 Partidos</h2>
                     <div id="latest-results" class="space-y-4"></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div id="standings-card" class="bg-white p-6 rounded-xl shadow-md relative">
-                        <button data-share-id="standings-card" data-share-title="Clasificación" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
+                        <button data-share-id="standings-card" data-share-title="Clasificación" class="share-btn absolute top-3 right-3 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
                         <h2 class="text-2xl font-bold mb-4 border-b pb-2">Clasificación</h2>
                         <div id="public-standings"></div>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-md space-y-6">
                         <div id="scorers-card" class="relative">
-                            <button data-share-id="scorers-card" data-share-title="Pichichi" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
+                            <button data-share-id="scorers-card" data-share-title="Pichichi" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
                             <h2 class="text-2xl font-bold mb-4 border-b pb-2">Pichichi</h2>
                             <div id="public-top-scorers"></div>
                         </div>
                          <div id="zamora-card" class="relative">
-                            <button data-share-id="zamora-card" data-share-title="Zamora" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl z-10">📤</button>
+                            <button data-share-id="zamora-card" data-share-title="Zamora" class="share-btn absolute top-0 right-0 text-gray-400 hover:text-blue-500 p-2 text-xl">📤</button>
                             <h2 class="text-2xl font-bold mb-4 border-b pb-2">Zamora</h2>
                             <div id="public-zamora"></div>
                         </div>
@@ -255,11 +255,11 @@
         
         // --- DATOS (FIREBASE) ---
         async function saveData() {
-            if (!auth.currentUser || !ADMIN_UIDS.includes(auth.currentUser.uid)) { alert("No tienes permiso."); return; }
+            if (!auth.currentUser || !ADMIN_UIDS.includes(auth.currentUser.uid)) { alert("No tienes permiso para realizar esta acción."); return; }
             try {
                 const { dataLoaded, ...dataToSave } = state;
                 await setDoc(leagueDocRef, dataToSave);
-            } catch (error) { console.error("Error saving data:", error); alert("Hubo un error al guardar."); }
+            } catch (error) { console.error("Error saving data:", error); alert("Hubo un error al guardar los datos."); }
         }
 
         function loadData() {
@@ -337,7 +337,11 @@
                 team2Stat.gf += match.teams[1].score; team2Stat.ga += match.teams[0].score; 
                 if (match.teams[0].score > match.teams[1].score) { team1Stat.wins++; team2Stat.losses++; team1Stat.pts += 3; } 
                 else if (match.teams[1].score > match.teams[0].score) { team2Stat.wins++; team1Stat.losses++; team2Stat.pts += 3; } 
-                else { team1Stat.draws++; team2Stat.draws++; team1Stat.pts += 1; } 
+                else { 
+                    team1Stat.draws++; team2Stat.draws++; 
+                    team1Stat.pts += 1; 
+                    team2Stat.pts += 1; // ¡CORRECCIÓN: Se suman puntos a AMBOS equipos!
+                } 
                 
                 (match.scorers || []).forEach(scorer => { if (!scorerStats[scorer.player]) scorerStats[scorer.player] = 0; scorerStats[scorer.player] += scorer.goals; }); 
 
